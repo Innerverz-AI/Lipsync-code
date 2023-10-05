@@ -48,7 +48,7 @@ class Sync_tool():
         self.DET = S3FD(device='cuda')
         self.syncnet = SyncNet()
         
-    def forward(self, video_path):
+    def forward(self, video_path, save_path):
         self.separate_info(video_path)
         frames_dets = self.get_bbox()
         track_dets = self.tracking(frames_dets)
@@ -60,7 +60,7 @@ class Sync_tool():
         
         offset, conf = self.get_offset(im_feats, ad_feats)
         
-        self.get_synced_video(video_path, offset)
+        self.get_synced_video(video_path, save_path, offset)
         
         if self.opts.delete_tmp:
             os.system(f'rm -r {self.opts.tmp_save_path}')
@@ -108,7 +108,6 @@ class Sync_tool():
                 if len(tracks) == 0:
                     tracks.append(face)
                     faces.remove(face)
-                # 어떤 얼굴이든 1초 안에 나타난 경우, 마지막에 찾은 얼굴과 iou가 iouThres 이상인 경우 추가. 1초 안에 나타나지 않는 경우 중단.
                 elif face['index'] - tracks[-1]['index'] <= self.opts.num_failed_det:
                     iou = bb_intersection_over_union(face['bbox'], tracks[-1]['bbox'])
                     if iou > self.opts.iouThres:
@@ -120,7 +119,6 @@ class Sync_tool():
 
         return tracks
         
-    # 
     def crop_face(self, frames_dets):
         
         # get box position
@@ -156,17 +154,12 @@ class Sync_tool():
         
         # video frame numpy to tensor
         faces = []
-        self.opts.tmp_face = self.opts.tmp_save_path + '/faces'
-        os.makedirs(self.opts.tmp_face, exist_ok=True)
         for track_det in track_dets:
-            cv2.imwrite(os.path.join(self.opts.tmp_face, str(track_det['index']).zfill(3) + '.png'), track_det['face'])   
             faces.append(track_det['face'])
         im_np = np.stack(faces,axis=3)
         im_np = np.expand_dims(im_np,axis=0)
         im_ts = torch.tensor(np.transpose(im_np,(0,3,4,1,2)), dtype=torch.float32) # shape = (b, c, t, 224, 224)
-        # imtv = torch.autograd.Variable(torch.from_numpy(np.transpose(im_np,(0,3,4,1,2)).astype(float)).float())
-        # import pdb;pdb.set_trace()
-        # audio mfcc numpy to tensor
+
         cc = np.expand_dims(np.expand_dims(mfcc,axis=0),axis=0)
         cct = torch.autograd.Variable(torch.from_numpy(cc.astype(float)).float())
         
@@ -185,7 +178,6 @@ class Sync_tool():
             im_out, cc_out = self.syncnet(im_in.cuda(), cc_in.cuda())
             im_feats.append(im_out.data.cpu())
             cc_feats.append(cc_out.data.cpu())
-            # import pdb;pdb.set_trace()
 
         im_feats = torch.cat(im_feats, 0)
         cc_feats = torch.cat(cc_feats, 0)
@@ -201,7 +193,7 @@ class Sync_tool():
         conf   = torch.median(mdist) - minval
         return offset , conf
     
-    def get_synced_video(self, video_path, offset):
-        command = f'ffmpeg -y -i {video_path} -itsoffset {offset/self.opts.frame_rate} -i {video_path} -vb 20M -map 0:v -map 1:a -r {self.opts.frame_rate} {os.path.join(self.opts.save_root, self.opts.video_name + ".mp4")}'
+    def get_synced_video(self, video_path, save_path, offset):
+        command = f'ffmpeg -y -i {video_path} -itsoffset {offset/self.opts.frame_rate} -i {video_path} -vb 20M -map 0:v -map 1:a -r {self.opts.frame_rate} {save_path}'
         os.system(command)
     
