@@ -10,8 +10,8 @@ import torch
 from scipy import signal
 from scipy.interpolate import interp1d
 
-from detectors import S3FD
-from syncnet import SyncNet
+from packages.detectors import S3FD
+from packages.syncnet import SyncNet
 
 from .audio import get_mfcc
 from .util import bb_intersection_over_union, calc_pdist
@@ -40,6 +40,7 @@ class Sync_tool():
         # save options
         parser.add_argument('--tmp_save_root',  type=str, default='_sync')
         parser.add_argument('--save_root',  type=str, default='./synced_videos')
+        parser.add_argument('--delete_tmp',  type=bool, default=True)
         
         self.opts = parser.parse_args()
         
@@ -60,6 +61,9 @@ class Sync_tool():
         offset, conf = self.get_offset(im_feats, ad_feats)
         
         self.get_synced_video(video_path, offset)
+        
+        if self.opts.delete_tmp:
+            os.system(f'rm -r {self.opts.tmp_save_path}')
         
         return offset
         

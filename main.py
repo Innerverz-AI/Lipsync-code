@@ -9,7 +9,8 @@ from utils import Sync_tool, get_audio_features
 # audio_features_dict = get_audio_features(audio_path)
 
 # get synced videos
-video_path = ''
+
+video_path = './assets/00091.mp4'
 sync_tool = Sync_tool()
 offset = sync_tool.forward(video_path)
     
