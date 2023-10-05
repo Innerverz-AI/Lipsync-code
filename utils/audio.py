@@ -38,10 +38,10 @@ def get_mel(audio_path, n_fft=800, sr=16000):
     return mel
 
 
-def get_mfcc(audio_path):
+def get_mfcc(audio_path, sr=16000):
     sample_rate, audio = wavfile.read(audio_path)
     
-    mfcc = zip(*python_speech_features.mfcc(audio,sample_rate))
+    mfcc = zip(*python_speech_features.mfcc(audio, sr))
     mfcc = np.stack([np.array(i) for i in mfcc])
     return mfcc
 
