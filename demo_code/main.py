@@ -9,8 +9,7 @@ from innerverz import DECA
 from tqdm import tqdm
 
 from packages.LipSync import LipSyncer
-
-from .utils import util, util_infer
+from utils import util, util_infer
 
 
 def save(opts, results, inputs, tmp):
@@ -99,11 +98,11 @@ if __name__ == "__main__":
 
     # inference options
     parser.add_argument(
-        "--driving_pp_path", type=str, default="./assets/demo_driving_pp"
+        "--driving_pp_path", type=str, default="../assets/pp_data"
     )
-    parser.add_argument("--source_pp_path", type=str, default="./assets/demo_crop_pp")
+    parser.add_argument("--source_pp_path", type=str, default="../assets/pp_data")
     parser.add_argument(
-        "--video_path", type=str, default="./assets/demo_driving_pp"
+        "--video_path", type=str, default="../assets/synced_videos"
     )
     # parser.add_argument("--video_path", type=str, default="./assets/demo_crop_videos")
     parser.add_argument(
@@ -126,14 +125,14 @@ if __name__ == "__main__":
     # lipsync model options
     parser.add_argument("--frame_amount", type=int, default=5)
     parser.add_argument("--hubert_amount", type=int, default=9)
-    parser.add_argument("--ckpt_file", type=str, default="Taylor_no_reg_long_38k.pt")
+    parser.add_argument("--ckpt_file", type=str, default="sparse_sync_1_160000.pt")
     parser.add_argument("--skip_connection", type=bool, default=False)
     parser.add_argument("--ref_input", type=bool, default=False)
 
     args = parser.parse_args()
 
     LS = LipSyncer(
-        ckpt_path=f"./package/LipSync/ckpts/{args.ckpt_file}",
+        ckpt_path=f"../packages/LipSync/ckpts/{args.ckpt_file}",
         skip=args.skip_connection,
         ref_input=args.ref_input,
     )
@@ -141,15 +140,15 @@ if __name__ == "__main__":
 
     # must file type : mp4
     driving_clip_names = [
-        "2-1-crop",
+        "GU_1",
     ]
     source_clip_names = [
-        "Taylor_sync_1",
+        "GU_1",
     ]
     for driving_clip_crop_name in driving_clip_names:
         for source_clip_crop_name in source_clip_names:
-            if driving_clip_crop_name == source_clip_crop_name:
-                continue
+            # if driving_clip_crop_name == source_clip_crop_name:
+            #     continue
             try:
                 args.dv_name, args.sv_name = (
                     driving_clip_crop_name,

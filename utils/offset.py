@@ -38,7 +38,7 @@ class Sync_tool():
         parser.add_argument('--vshift',  type=int, default=10)
         
         # save options
-        parser.add_argument('--tmp_save_root',  type=str, default='_sync')
+        parser.add_argument('--tmp_save_root',  type=str, default='.sync')
         parser.add_argument('--save_root',  type=str, default='./synced_videos')
         parser.add_argument('--delete_tmp',  type=bool, default=True)
         
