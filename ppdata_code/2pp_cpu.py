@@ -1,8 +1,8 @@
 import os, glob, cv2, torch, time
 import numpy as np
-from tqdm import tqdm
 import parmap
 import multiprocessing
+from tqdm import tqdm
 from innerverz import FaceAligner, DECA
 
 FA_3D = FaceAligner(size=512, lmk_type='3D')

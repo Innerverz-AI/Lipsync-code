@@ -87,4 +87,4 @@ max_crop_duration = 6000 # second
 
 num_cores = multiprocessing.cpu_count()
 print(num_cores)
-parmap.map(save_frames, video_paths, pm_pbar=True, pm_processes=int(num_cores * .55))
+parmap.map(pp_from_video, video_paths, pm_pbar=True, pm_processes=int(num_cores * .55))
