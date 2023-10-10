@@ -113,11 +113,6 @@ if __name__ == "__main__":
     )
 
     # video options
-    parser.add_argument("--sv_to", type=int, default=0)
-    parser.add_argument("--sv_from", type=int, default=10)
-    parser.add_argument("--dv_to", type=int, default=0)
-    parser.add_argument("--dv_from", type=int, default=10)
-
     parser.add_argument("--fps", type=int, default=25)
     parser.add_argument("--image_size", type=int, default=256)
     parser.add_argument("--skin_dilate_iter", type=int, default=5)

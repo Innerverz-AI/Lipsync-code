@@ -100,7 +100,7 @@ if __name__ == "__main__":
     FA_3D = FaceAligner(size=args.image_size, lmk_type="3D")
     synctool = Sync_tool()
 
-    video_file_paths = ["../assets/demo_videos/GU_1.mp4"]
+    video_file_paths = sorted(glob.glob(os.path.join(args.video_path, '*.*')))
     for i, video_file_path in enumerate(video_file_paths):
         try:
             work = f"###  {os.path.basename(video_file_path)} ({str(i+1)}/{len(video_file_paths)})  ###"
