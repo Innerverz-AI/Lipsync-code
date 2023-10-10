@@ -48,10 +48,10 @@ def run(opts, generators, DC):
 
         # get convexhull
         sv_masks = util_infer.get_convexhull_mask(
-            sv_lmks, dilate_iter=opts.dilate_iter, device="cpu"
+            sv_lmks, skin_dilate_iter=opts.skin_dilate_iter, nose_dilate_iter=opts.nose_dilate_iter, device="cpu"
         )
         lipsync_masks = util_infer.get_convexhull_mask(
-            lipsync_sm_lmks, dilate_iter=opts.dilate_iter, device="cpu"
+            lipsync_sm_lmks, skin_dilate_iter=opts.skin_dilate_iter, nose_dilate_iter=opts.nose_dilate_iter, device="cpu"
         )
         mask = sv_masks | lipsync_masks
         dilate_mask = util.get_blend_mask(np.array(mask.permute([0, 2, 3, 1])))
@@ -120,7 +120,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--fps", type=int, default=25)
     parser.add_argument("--image_size", type=int, default=256)
-    parser.add_argument("--dilate_iter", type=int, default=5)
+    parser.add_argument("--skin_dilate_iter", type=int, default=5)
+    parser.add_argument("--nose_dilate_iter", type=int, default=8) # 0
 
     # lipsync model options
     parser.add_argument("--frame_amount", type=int, default=5)

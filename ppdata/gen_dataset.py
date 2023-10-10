@@ -10,7 +10,7 @@ import numpy as np
 import parmap
 import torch
 from innerverz import DECA, FaceAligner
-from pp_utils import dict_setting, get_batch_dataloader
+from util.pp_utils import dict_setting, get_batch_dataloader
 
 sys.path.append('../')
 from utils import Sync_tool
@@ -51,7 +51,7 @@ def get_faces(inputs):
     face_dict = FA_3D.get_face(image)
     if not face_dict['facebool']: 
         f = open('no_det_videos.txt', 'a')
-        f.write(f'{video_path}, {frame_name}\n') # video path vs frame path
+        f.write(f'{video_path}, {frame_name}\n')
         f.close()
         return
     aligned_img = face_dict['aligned_face']
@@ -75,11 +75,9 @@ def get_faces(inputs):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--id_num', type=int, default=99000)
-    # start id num / fps / sr / save path
     parser.add_argument('--video_folder_path', type=str, default='../assets/dataset_videos')
     parser.add_argument('--synced_video_folder_path', type=str, default='./assets/sync_dataset_videos')
     parser.add_argument('--save_folder_path', type=str, default='./assets/dataset_videos_pp')
-    parser.add_argument('--list', nargs='+', default=(10,12), type=int, help='the indices of transparent classes')
     parser.add_argument('--gen_sync_video', default=True, type=bool)
     
     # GPU process options
@@ -87,10 +85,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_worker', type=int, default=16)
     parser.add_argument('--num_iter', type=int, default=10)
     
-    
     args = parser.parse_args()
     
-    # sync video & 
     save_list = []
     video_path_list = sorted(glob.glob(os.path.join(args.video_folder_path,'*.*')))
     for i, video_file_path in enumerate(video_path_list):
@@ -107,7 +103,7 @@ if __name__ == '__main__':
     for id_name, video_file in save_list:
         video_name = os.path.basename(video_file).split('.')[0]
         video_path = os.path.join(args.video_folder_path, video_file)
-        save_path = os.path.join(args.save_folder_path, id_name, video_name)#, 'frames')
+        save_path = os.path.join(args.save_folder_path, id_name, video_name)
 
         get_video_frames([video_name, video_path, save_path])
         
@@ -115,7 +111,7 @@ if __name__ == '__main__':
         video_name = os.path.basename(video_file).split('.')[0]
         video_path = os.path.join(args.video_folder_path, video_file)
         frame_paths = sorted(glob.glob(os.path.join(args.save_folder_path, id_name, video_name, 'frames/*.*')))
-        save_path = os.path.join(args.save_folder_path, id_name, video_name)#, 'frames')
+        save_path = os.path.join(args.save_folder_path, id_name, video_name)
         face_save_path = os.path.join(save_path, 'aligned_imgs')
         lmk_save_path = os.path.join(save_path, 'insight_lmks')
         tmp_save_path = os.path.join(save_path, 'tmp_dicts')

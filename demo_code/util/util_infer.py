@@ -68,17 +68,83 @@ def transfer_lip_params(s_flame_params, d_flame_params):
     return lipysnc_flame_params
 
 
-def get_convexhull_mask(batch_lmk, dilate_iter=5, image_size=256, device="cuda"):
+
+
+def get_convexhull_mask(
+    batch_lmk, skin_dilate_iter=5, nose_dilate_iter=8, image_size=256, device="cuda"
+):
     masks = []
     for lmk in batch_lmk:
         kernel = np.ones((3, 3), np.uint8)
-        canvas = np.zeros((image_size, image_size, 3)).astype(np.uint8)
-        points = np.array(lmk[1:16], np.int32)
-        skin_mask = cv2.fillConvexPoly(canvas, points=points, color=(1, 1, 1))
-        dilation_skin_mask = cv2.dilate(skin_mask, kernel, iterations=dilate_iter)
-        masks.append(np.expand_dims(dilation_skin_mask.transpose(2, 0, 1), axis=0))
+        skin_canvas = np.zeros((image_size, image_size, 3)).astype(np.uint8)
+        skin_points = np.array(
+            [
+                # lmk[1],
+                lmk[2],
+                lmk[3],
+                lmk[4],
+                lmk[5],
+                lmk[6],
+                lmk[7],
+                lmk[8],
+                lmk[9],
+                lmk[10],
+                lmk[11],
+                lmk[12],
+                lmk[13],
+                lmk[14],
+                # lmk[15],
+                (lmk[35] + lmk[47]) / 2,
+                lmk[35],
+                lmk[33],
+                lmk[31],
+                (lmk[40] + lmk[31]) / 2,
+            ],
+            np.int32,
+        )
+        skin_mask = cv2.fillPoly(skin_canvas, [skin_points], (1, 1, 1))
+        dilation_skin_mask = cv2.dilate(skin_mask, kernel, iterations=skin_dilate_iter)
+
+        if nose_dilate_iter:
+            nose_canvas = np.zeros((image_size, image_size, 3)).astype(np.uint8)
+            nose_points = cv2.convexHull(
+                np.array(
+                    [
+                        lmk[31] + [0, -10],
+                        lmk[33] + [0, -10],
+                        lmk[35] + [0, -10],
+                        lmk[27],
+                        lmk[30],
+                    ],
+                    np.int32,
+                )
+            )
+            nose_mask = cv2.fillConvexPoly(
+                nose_canvas, points=nose_points, color=(1, 1, 1)
+            )
+
+            dilation_nose_mask = cv2.dilate(
+                nose_mask, kernel, iterations=nose_dilate_iter
+            )
+            dilation_mask = dilation_skin_mask & (dilation_nose_mask * (-1) + 1)
+        else:
+            dilation_mask = dilation_skin_mask
+
+        masks.append(np.expand_dims(dilation_mask.transpose(2, 0, 1), axis=0))
     masks = np.concatenate(masks, axis=0)
     return torch.from_numpy(masks).to(device)
+
+# def get_convexhull_mask(batch_lmk, dilate_iter=5, image_size=256, device="cuda"):
+#     masks = []
+#     for lmk in batch_lmk:
+#         kernel = np.ones((3, 3), np.uint8)
+#         canvas = np.zeros((image_size, image_size, 3)).astype(np.uint8)
+#         points = np.array(lmk[1:16], np.int32)
+#         skin_mask = cv2.fillConvexPoly(canvas, points=points, color=(1, 1, 1))
+#         dilation_skin_mask = cv2.dilate(skin_mask, kernel, iterations=dilate_iter)
+#         masks.append(np.expand_dims(dilation_skin_mask.transpose(2, 0, 1), axis=0))
+#     masks = np.concatenate(masks, axis=0)
+#     return torch.from_numpy(masks).to(device)
 
 
 def get_batch_image_from_path(opts, image_path_list):

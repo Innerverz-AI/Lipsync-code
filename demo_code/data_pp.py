@@ -109,10 +109,10 @@ if __name__ == "__main__":
             print("#" * len(work))
             video_file = os.path.basename(video_file_path)
             synced_video_path = os.path.join(args.synced_video_path, video_file)
+            
             print('Sync...')
             synctool.forward(video_file_path, synced_video_path)
             
-            import pdb;pdb.set_trace()
             args.video_file_path = synced_video_path
             args = util.setting_pp_init(args)
             video_pp(args, FA_3D, DC)
