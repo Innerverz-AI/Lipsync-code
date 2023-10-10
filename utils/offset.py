@@ -39,7 +39,7 @@ class Sync_tool():
         
         # save options
         parser.add_argument('--tmp_save_root',  type=str, default='.sync')
-        parser.add_argument('--save_root',  type=str, default='./synced_videos')
+        parser.add_argument('--save_root',  type=str, default='./assets/synced_videos')
         parser.add_argument('--delete_tmp',  type=bool, default=True)
         
         self.opts = parser.parse_args()
@@ -59,11 +59,11 @@ class Sync_tool():
         im_feats, ad_feats = self.get_feats(track_dets, mfcc_feature)
         
         offset, conf = self.get_offset(im_feats, ad_feats)
-        
+        import pdb;pdb.set_trace()
         self.get_synced_video(video_path, save_path, offset)
         
-        if self.opts.delete_tmp:
-            os.system(f'rm -r {self.opts.tmp_save_path}')
+        # if self.opts.delete_tmp:
+        #     os.system(f'rm -r {self.opts.tmp_save_path}')
         
         return offset
         

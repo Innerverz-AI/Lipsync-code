@@ -9,11 +9,10 @@ import librosa
 import numpy as np
 import torch
 from innerverz import DECA, FaceAligner
+from util import util
 
-from utils import util
-
-# sys.path.append('..')
-# from ..utils import Sync_tool
+sys.path.append('../')
+from utils import Sync_tool
 
 
 def video_pp(opts, FA, DECA):
@@ -81,12 +80,12 @@ if __name__ == "__main__":
 
     # path options
     parser.add_argument(
-        "--video_path", type=str, default="../assets/videos"
+        "--video_path", type=str, default="../assets/demo_videos"
     )
     parser.add_argument(
-        "--synced_video_path", type=str, default="../assets/synced_videos"
+        "--synced_video_path", type=str, default="./assets/synced_videos"
     )
-    parser.add_argument("--pp_save_root", type=str, default="../assets/pp_data")
+    parser.add_argument("--pp_save_root", type=str, default="./assets/synced_data_pp")
 
     # video options
     parser.add_argument("--fps", type=int, default=25)
@@ -99,9 +98,9 @@ if __name__ == "__main__":
 
     DC = DECA()
     FA_3D = FaceAligner(size=args.image_size, lmk_type="3D")
-    # synctool = Sync_tool()
+    synctool = Sync_tool()
 
-    video_file_paths = ["../assets/synced_videos/GU_1.mp4"]
+    video_file_paths = ["../assets/demo_videos/GU_1.mp4"]
     for i, video_file_path in enumerate(video_file_paths):
         try:
             work = f"###  {os.path.basename(video_file_path)} ({str(i+1)}/{len(video_file_paths)})  ###"
@@ -109,10 +108,12 @@ if __name__ == "__main__":
             print(work)
             print("#" * len(work))
             video_file = os.path.basename(video_file_path)
-            # synced_video_path = os.path.join(args.synced_video_path, video_file)
-            # synctool.forward(video_file_path, synced_video_path)
+            synced_video_path = os.path.join(args.synced_video_path, video_file)
+            print('Sync...')
+            synctool.forward(video_file_path, synced_video_path)
             
-            args.video_file_path = video_file_path
+            import pdb;pdb.set_trace()
+            args.video_file_path = synced_video_path
             args = util.setting_pp_init(args)
             video_pp(args, FA_3D, DC)
             audio_pp(args)
