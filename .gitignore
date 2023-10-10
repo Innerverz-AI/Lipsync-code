@@ -1,7 +1,9 @@
 assets
+packages
 .DS_Store
 .vscode
-
+detectors
+syncnet
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
