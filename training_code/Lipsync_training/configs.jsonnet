@@ -23,7 +23,7 @@
         W_CYCLE: 0,
         W_FEAT: 10,
         W_LPIPS: 100,
-        W_SYNC: 0.1,
+        W_SYNC: 1,
     },
 
     CYCLE: {
@@ -64,6 +64,7 @@
             GT_IMG:
                 [
                     '/ssd2t/DATASET/VoxCeleb2/1id_1video/512over/*/*/*/aligned_imgs',
+                    # '/ssd2t/DATASET/VoxCeleb2/Oct1_sync_crop_part2/*/*/*/aligned_imgs',
                 ],
         },
 
@@ -71,6 +72,7 @@
             GT_IMG:
                 [
                     '/ssd2t/DATASET/VoxCeleb2/1id_1video/512over/*/*/*/aligned_imgs',
+                    # '/ssd2t/DATASET/VoxCeleb2/Oct1_sync_crop_part2/*/*/*/aligned_imgs',
                 ],
         }
     },

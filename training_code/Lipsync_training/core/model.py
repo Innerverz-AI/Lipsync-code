@@ -79,15 +79,16 @@ class MyModel(ModelInterface):
         
         # run syncnet model
         B = run_dict['result_img'].shape[0]
-        img_size = run_dict['result_img'].shape[1]
+        img_size = run_dict['result_img'].shape[2]
         sync_imgs, sync_imgs_256 = [], []
         for i in range(B):
             # crop images
-            sync_img = run_dict['result_img'][i][:,img_size/2:,img_size/4:img_size/4+img_size/2].unsqueeze(0)
-            sync_imgs.append(F.interpolate(sync_img, size=(img_size/4, img_size/2), mode='bilinear').squeeze())
+            sync_img = run_dict['result_img'][i][:,int(img_size/2):,int(img_size/4):int(img_size/4)+int(img_size/2)].unsqueeze(0)
+            sync_imgs.append(F.interpolate(sync_img, size=(int(img_size/4), int(img_size/2)), mode='bilinear').squeeze())
             sync_imgs_256.append(F.interpolate(sync_img, size=(img_size, img_size), mode='bilinear').squeeze())
         run_dict['crop_img'] = torch.stack(sync_imgs_256, dim=0) # B*T, 3, 256, 256
         sync_img = torch.stack(sync_imgs, dim=0) # B*T, 3, H, W
+        sync_img = torch.flip(sync_img, [1]) # rgb to bgr
         sync_img = torch.split(sync_img, sync_img.shape[0]//5, dim=0)
         sync_img = torch.stack(sync_img, dim=2)*0.5+0.5 # B, 3, T, H, W
         sync_img = torch.cat([sync_img[:, :, i] for i in range(5)], dim=1) # B,3*T, H, W
