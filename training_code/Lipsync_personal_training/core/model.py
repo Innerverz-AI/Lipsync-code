@@ -112,6 +112,8 @@ class MyModel(ModelInterface):
         run_dict['reg_crop_img'] = torch.stack(reg_sync_imgs_256, dim=0)  # B*T, 3, 256, 256
         sync_img = torch.stack(sync_imgs, dim=0) # B*T, 3, H, W
         reg_sync_img = torch.stack(reg_sync_imgs, dim=0) # B*T, 3, H, W
+        sync_img = torch.flip(sync_img, [1]) # rgb to bgr
+        reg_sync_img = torch.flip(reg_sync_img, [1]) # rgb to bgr
         sync_img = torch.split(sync_img, sync_img.shape[0]//5, dim=0)
         reg_sync_img = torch.split(reg_sync_img, reg_sync_img.shape[0]//5, dim=0)
         sync_img = torch.stack(sync_img, dim=2)*0.5+0.5 # B, 3, T, H, W

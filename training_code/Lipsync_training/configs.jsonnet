@@ -3,14 +3,16 @@
         MODEL_ID: 'LIPSYNC', 
         SAME_PROB: 0,
         BATCH_PER_GPU: 4,
-        MAX_STEP: 400000,
+        MAX_STEP: 600000,
         SAVE_ROOT: 'train_results',
         PACKAGES_PATH: '../PACKAGES',
-        FRAME_NUM_PER_VIDEO: 100,
+        FRAME_NUM_PER_VIDEO: 10000,
         VAL_SIZE: 0,
         VAL_STEP: 0,
         IMG_SIZE: 256,
         RUN_ID: 'test',
+        SYNC_STEP : 0,
+        NO_LMKS : true,
     },
 
     # weight of loss
@@ -23,7 +25,7 @@
         W_CYCLE: 0,
         W_FEAT: 10,
         W_LPIPS: 100,
-        W_SYNC: 0.1,
+        W_SYNC: 0,
     },
 
     CYCLE: {
@@ -60,10 +62,12 @@
     },
 
     DATASET: {
+        MULTI_DET_VIDEOS: '/home/8414sys/Lipsync_training_last/multi_det_videos.txt',
         TRAIN_PATH:{
             GT_IMG:
                 [
                     '/ssd2t/DATASET/VoxCeleb2/1id_1video/512over/*/*/*/aligned_imgs',
+                    # '/ssd2t/DATASET/VoxCeleb2/Oct1_sync_crop_part2/*/*/*/aligned_imgs',
                 ],
         },
 
@@ -71,6 +75,7 @@
             GT_IMG:
                 [
                     '/ssd2t/DATASET/VoxCeleb2/1id_1video/512over/*/*/*/aligned_imgs',
+                    # '/ssd2t/DATASET/VoxCeleb2/Oct1_sync_crop_part2/*/*/*/aligned_imgs',
                 ],
         }
     },
