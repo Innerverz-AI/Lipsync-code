@@ -17,8 +17,10 @@ def pp_from_video(video_path, args):
     save_dir = video_path.replace(args.dataset_dir, args.save_dir).replace('.mp4', '')
     frame_save_dir =os.path.join(save_dir, "frames")
     mel_save_path = os.path.join(save_dir, "mel")
+    mfcc_save_path = os.path.join(save_dir, "mfcc")
     os.makedirs(frame_save_dir, exist_ok=True)
     os.makedirs(mel_save_path, exist_ok=True)
+    os.makedirs(mfcc_save_path, exist_ok=True)
     
     # save frames
     total_num = 0
@@ -55,12 +57,17 @@ def pp_from_video(video_path, args):
     audio_duration = len(audio_data) / args.sr
 
     origin_mel = get_mel(audio_path, args.sr).T
-
+    
+    # mfcc
+    mfcc_sr, mfcc_wav = wavfile.read(audio_path)
+    mfcc = zip(*python_speech_features.mfcc(mfcc_wav, args.sr))
+    mfcc = np.stack([np.array(i) for i in mfcc])
+    
     min_duration = min(video_duration, audio_duration)
     
     crop_duration = args.max_crop_duration
     if crop_duration > min_duration:
-        crop_duration = int(min_duration)
+        crop_duration = min_duration
     
     v_start = 0
     a_start_sample = int(v_start * args.sr)
@@ -69,6 +76,11 @@ def pp_from_video(video_path, args):
     mel_end_idx = int(mel_start_idx + 80 * crop_duration)  # 0.2sec 16 -> 10sec : 800
     mel = origin_mel[mel_start_idx:mel_end_idx, :]
     
+    # mfcc
+    mfcc_wav_segment = mfcc[
+        :, int(v_start * args.fps * 4) : int(v_start * args.fps * 4) + int(crop_duration * 100)
+    ]  # 0.2sec 20개 -> 1sec : 100 -> 10sec : 1000
+
     # mel
     # 전체 변환 -> 16개 만큼 자르기
     # 오디오 -> 자르고 -> 변환 -> 17, 80
@@ -76,11 +88,15 @@ def pp_from_video(video_path, args):
         os.path.join(mel_save_path, f"{str(int(v_start * args.fps)).zfill(6)}.npy"),
         mel,
     )  # 800(t) 80
+    np.save(
+        os.path.join(mfcc_save_path, f"{str(int(v_start * args.fps)).zfill(6)}.npy"),
+        mfcc_wav_segment,
+    )  # 13, 1000
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_dir', type=str, default='/ssd2t/DATASET/VoxCeleb2/time_test')
-    parser.add_argument('--save_dir', type=str, default='/ssd2t/DATASET/VoxCeleb2/time_test')
+    parser.add_argument('--dataset_dir', type=str, default='z')
+    parser.add_argument('--save_dir', type=str, default='z')
     parser.add_argument('--fps', type=int, default=25)
     parser.add_argument('--sr', type=int, default=16000)
     parser.add_argument('--max_crop_duration', type=int, default=6000)
