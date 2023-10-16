@@ -1,17 +1,15 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torchvision import transforms
 
-from .syncnet import SyncNet_color
+from .syncnet import SyncNet_color_1024
 
 class SyncNet(nn.Module):
-    def __init__(self, ckpt_path = 'SyncNet/ckpt/checkpoint_step000015000.pth'):
+    def __init__(self, ckpt_path = 'SyncNet/ckpt/VoxCeleb2_add_dataset_110k.pth'):
         super(SyncNet, self).__init__()
         
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.syncnet = SyncNet_color().to(device)
+        self.syncnet = SyncNet_color_1024().to(device)
         
         ckpt = torch.load(ckpt_path, map_location=device)["state_dict"]
         
