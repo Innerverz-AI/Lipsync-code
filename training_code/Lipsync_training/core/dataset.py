@@ -28,7 +28,7 @@ class MyDataset(DatasetInterface):
         self.fps = 25  # frame per second
         self.mps = 80  # mel per second
         self.mpts = 16  # mel per timestep
-        self.image_ratio = 512 // CONFIG["IMG_SIZE"]
+        self.image_ratio = 512 // CONFIG["BASE"]["IMG_SIZE"]
         for name, list in dataset_path_list.items():
             self.__setattr__(name, list)
 

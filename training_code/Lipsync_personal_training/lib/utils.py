@@ -170,10 +170,9 @@ def stack_image_grid(batch_data_items: list, target_image: list):
     target_image.append(torch.cat(column, dim=-2))
 
 
-def get_convexhull_mask(faces, lmks):
+def get_convexhull_mask(faces, lmks, or_mask=None):
     faces = faces.clone().detach().cpu().numpy()
     lmks = lmks.clone().detach().cpu().numpy()
-
     masks = []
     for i in range(faces.shape[0]):
         face = faces[i].transpose(1, 2, 0)
@@ -221,7 +220,25 @@ def get_convexhull_mask(faces, lmks):
         dilation_skin_mask = cv2.dilate(skin_mask, kernel, iterations=5)
         dilation_nose_mask = cv2.dilate(nose_mask, kernel, iterations=8)
         dilation_mask = dilation_skin_mask & (dilation_nose_mask * (-1) + 1)
-        masks.append(np.expand_dims(dilation_mask.transpose(2, 0, 1), axis=0))
+        # dilation_mask = cv2.blur(dilation_mask*127.5+127.5, (5, 5))
+        # dilation_mask = dilation_mask/127.5-1
+        masks.append(
+            np.expand_dims(dilation_mask.transpose(2, 0, 1).astype(np.float32), axis=0)
+        )
+    masks = np.concatenate(masks, axis=0).astype(np.int32)
+    return torch.from_numpy(masks).cuda()
+
+
+def blur_mask(mask):
+    faces = mask.clone().detach().cpu().numpy()
+    masks = []
+    for i in range(faces.shape[0]):
+        face = faces[i].transpose(1, 2, 0).astype(np.float32)
+        dilation_mask = cv2.blur(face * 127.5 + 127.5, (5, 5))
+        dilation_mask = dilation_mask / 127.5 - 1
+        masks.append(
+            np.expand_dims(dilation_mask.transpose(2, 0, 1).astype(np.float32), axis=0)
+        )
     masks = np.concatenate(masks, axis=0)
     return torch.from_numpy(masks).cuda()
 

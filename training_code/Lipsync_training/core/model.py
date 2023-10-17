@@ -6,7 +6,7 @@ from lib import utils
 from lib.model import ModelInterface
 from lib.discriminators import ProjectedDiscriminator
 from core.loss import MyModelLoss
-from core.nets import MyGenerator, S
+from core.nets import MyGenerator
 from innerverz import DECA
 from lib.utils import get_convexhull_mask
 from SyncNet import SyncNet
@@ -169,7 +169,6 @@ class MyModel(ModelInterface):
         sync_img = torch.cat(
             [sync_img[:, :, i] for i in range(5)], dim=1
         )  # B,3*T, H, W
-        print(sync_img.shape)
         run_dict["mel_embedding"], run_dict["img_embedding"] = self.S(
             run_dict["syncnet_feature"], sync_img
         )
