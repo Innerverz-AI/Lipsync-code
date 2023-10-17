@@ -1,5 +1,14 @@
 # Lipsync-code
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+[![Actions status](https://github.com/Innerverz-AI/Lipsync-code/workflows/Style%20checking/badge.svg)](https://github.com/Innerverz-AI/Lipsync-code/actions)
+
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Actions status](https://github.com/Innerverz-AI/Lipsync-code/workflows/Linting/badge.svg)](https://github.com/Innerverz-AI/Lipsync-code/actions)
+
+<!--[![Actions status](https://github.com/Innerverz-AI/Lipsync-code/workflows/Tests/badge.svg)](https://github.com/Innerverz-AI/Lipsync-code/actions)-->
+
 ## TDL_JJY
 [x] 비디오로 부터 mel feature를 얻는 코드
 
