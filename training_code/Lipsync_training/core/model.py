@@ -155,11 +155,7 @@ class MyModel(ModelInterface):
             sync_img = run_dict["result_img"][i][
                 :, img_size // 2 :, img_size // 4 : img_size // 4 + img_size // 2
             ].unsqueeze(0)
-            sync_imgs.append(
-                F.interpolate(
-                    sync_img, size=(img_size // 4, img_size // 2), mode="bilinear"
-                ).squeeze()
-            )
+            sync_imgs.append(sync_img.squeeze())
             sync_imgs_256.append(
                 F.interpolate(
                     sync_img, size=(img_size, img_size), mode="bilinear"

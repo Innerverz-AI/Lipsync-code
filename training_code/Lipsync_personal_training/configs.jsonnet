@@ -66,6 +66,7 @@
     },
 
     DATASET: {
+        MULTI_DET_VIDEOS: '/home/8414sys/Lipsync_training_last/multi_det_videos.txt',
         TRAIN_PATH:{
             GT_IMG:
                 [
