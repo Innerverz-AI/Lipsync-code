@@ -1,9 +1,12 @@
 import abc
-import torch, os, random
-from torch.utils.data import DataLoader
-from core.dataset import divide_datasets, MyDataset
-from lib import utils
+import os
+import random
+
 import numpy as np
+import torch
+from core.dataset import MyDataset, divide_datasets
+from lib import utils
+from torch.utils.data import DataLoader
 
 # from packages import Ranger
 from tqdm import tqdm
@@ -247,19 +250,6 @@ class ModelInterface(metaclass=abc.ABCMeta):
             )
             if self.D:
                 self.opt_D = torch.optim.Adam(
-                    self.D.parameters(),
-                    lr=self.CONFIG["OPTIMIZER"]["LR_D"],
-                    betas=self.CONFIG["OPTIMIZER"]["BETA"],
-                )
-
-        if self.CONFIG["OPTIMIZER"]["TYPE"] == "Ranger":
-            self.opt_G = Ranger(
-                self.G.parameters(),
-                lr=self.CONFIG["OPTIMIZER"]["LR_G"],
-                betas=self.CONFIG["OPTIMIZER"]["BETA"],
-            )
-            if self.D:
-                self.opt_D = Ranger(
                     self.D.parameters(),
                     lr=self.CONFIG["OPTIMIZER"]["LR_D"],
                     betas=self.CONFIG["OPTIMIZER"]["BETA"],

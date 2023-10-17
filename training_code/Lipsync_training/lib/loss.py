@@ -1,10 +1,11 @@
 import abc
+import time
+
+import lpips  # pip install lpips
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import time
 import torchvision
-import lpips  # pip install lpips
 
 
 class LossInterface(metaclass=abc.ABCMeta):

@@ -1,13 +1,14 @@
+import glob
+import json
+import os
+
+import _jsonnet
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
-import cv2
-import os
-import glob
-import numpy as np
-from PIL import Image
-import os, yaml, json
-import _jsonnet
+import yaml
 
 
 def print_dict(dict):

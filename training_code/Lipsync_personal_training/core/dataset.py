@@ -1,9 +1,12 @@
-import os, torch, random
+import os
+import random
+
 import numpy as np
+import torch
 from lib import utils
 from lib.dataset import DatasetInterface
-from torchvision import transforms
 from PIL import Image
+from torchvision import transforms
 
 
 class MyDataset(DatasetInterface):

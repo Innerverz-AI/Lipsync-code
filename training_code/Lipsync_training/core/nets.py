@@ -1,9 +1,10 @@
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lib.nets import AdaINResBlock, ResBlock, Conv2d
 import torchvision
+from lib.nets import AdaINResBlock, Conv2d, ResBlock
 
 
 def fused_leaky_relu(input, bias, negative_slope=0.2, scale=2**0.5):
@@ -11,24 +12,6 @@ def fused_leaky_relu(input, bias, negative_slope=0.2, scale=2**0.5):
         input + bias.view((1, -1) + (1,) * (len(input.shape) - 2)),
         negative_slope=negative_slope,
     )
-
-
-class ToRGB(nn.Module):
-    def __init__(self, in_channel, style_dim):
-        super().__init__()
-
-        self.conv = ModulatedConv2d(in_channel, 3, 1, style_dim, demodulate=False)
-        self.bias = nn.Parameter(torch.zeros(1, 3, 1, 1))
-
-    def forward(self, input, style, skip=None):
-        out = self.conv(input, style)
-        out = out + self.bias
-
-        if skip is not None:
-            skip = F.interpolate(skip, scale_factor=2, mode="bilinear")
-            out = out + skip
-
-        return out
 
 
 class PixelNorm(nn.Module):

@@ -1,18 +1,35 @@
 from functools import partial
+
 import numpy as np
 import torch
 import torch.nn as nn
-
 from pg_modules.blocks import DownBlock, DownBlockPatch, conv2d
 from pg_modules.projector import F_RandomProj
-from pg_modules.diffaug import DiffAugment
 
 
 class SingleDisc(nn.Module):
-    def __init__(self, nc=None, ndf=None, start_sz=256, end_sz=8, head=None, separable=False, patch=False):
+    def __init__(
+        self,
+        nc=None,
+        ndf=None,
+        start_sz=256,
+        end_sz=8,
+        head=None,
+        separable=False,
+        patch=False,
+    ):
         super().__init__()
-        channel_dict = {4: 512, 8: 512, 16: 256, 32: 128, 64: 64, 128: 64,
-                        256: 32, 512: 16, 1024: 8}
+        channel_dict = {
+            4: 512,
+            8: 512,
+            16: 256,
+            32: 128,
+            64: 64,
+            128: 64,
+            256: 32,
+            512: 16,
+            1024: 8,
+        }
 
         # interpolate for start sz that are not powers of two
         if start_sz not in channel_dict.keys():
@@ -35,13 +52,19 @@ class SingleDisc(nn.Module):
 
         # Head if the initial input is the full modality
         if head:
-            layers += [conv2d(nc, nfc[256], 3, 1, 1, bias=False),
-                       nn.LeakyReLU(0.2, inplace=True)]
+            layers += [
+                conv2d(nc, nfc[256], 3, 1, 1, bias=False),
+                nn.LeakyReLU(0.2, inplace=True),
+            ]
 
         # Down Blocks
-        DB = partial(DownBlockPatch, separable=separable) if patch else partial(DownBlock, separable=separable)
+        DB = (
+            partial(DownBlockPatch, separable=separable)
+            if patch
+            else partial(DownBlock, separable=separable)
+        )
         while start_sz > end_sz:
-            layers.append(DB(nfc[start_sz],  nfc[start_sz//2]))
+            layers.append(DB(nfc[start_sz], nfc[start_sz // 2]))
             start_sz = start_sz // 2
 
         layers.append(conv2d(nfc[end_sz], 1, 4, 1, 0, bias=False))
@@ -52,13 +75,34 @@ class SingleDisc(nn.Module):
 
 
 class SingleDiscCond(nn.Module):
-    def __init__(self, nc=None, ndf=None, start_sz=256, end_sz=8, head=None, separable=False, patch=False, c_dim=1000, cmap_dim=64, embedding_dim=128):
+    def __init__(
+        self,
+        nc=None,
+        ndf=None,
+        start_sz=256,
+        end_sz=8,
+        head=None,
+        separable=False,
+        patch=False,
+        c_dim=1000,
+        cmap_dim=64,
+        embedding_dim=128,
+    ):
         super().__init__()
         self.cmap_dim = cmap_dim
 
         # midas channels
-        channel_dict = {4: 512, 8: 512, 16: 256, 32: 128, 64: 64, 128: 64,
-                        256: 32, 512: 16, 1024: 8}
+        channel_dict = {
+            4: 512,
+            8: 512,
+            16: 256,
+            32: 128,
+            64: 64,
+            128: 64,
+            256: 32,
+            512: 16,
+            1024: 8,
+        }
 
         # interpolate for start sz that are not powers of two
         if start_sz not in channel_dict.keys():
@@ -81,13 +125,19 @@ class SingleDiscCond(nn.Module):
 
         # Head if the initial input is the full modality
         if head:
-            layers += [conv2d(nc, nfc[256], 3, 1, 1, bias=False),
-                       nn.LeakyReLU(0.2, inplace=True)]
+            layers += [
+                conv2d(nc, nfc[256], 3, 1, 1, bias=False),
+                nn.LeakyReLU(0.2, inplace=True),
+            ]
 
         # Down Blocks
-        DB = partial(DownBlockPatch, separable=separable) if patch else partial(DownBlock, separable=separable)
+        DB = (
+            partial(DownBlockPatch, separable=separable)
+            if patch
+            else partial(DownBlock, separable=separable)
+        )
         while start_sz > end_sz:
-            layers.append(DB(nfc[start_sz],  nfc[start_sz//2]))
+            layers.append(DB(nfc[start_sz], nfc[start_sz // 2]))
             start_sz = start_sz // 2
         self.main = nn.Sequential(*layers)
 
@@ -134,7 +184,18 @@ class MultiScaleD(nn.Module):
         mini_discs = []
         for i, (cin, res) in enumerate(zip(self.disc_in_channels, self.disc_in_res)):
             start_sz = res if not patch else 16
-            mini_discs += [str(i), Disc(nc=cin, start_sz=start_sz, end_sz=8, separable=separable, patch=patch)],
+            mini_discs += (
+                [
+                    str(i),
+                    Disc(
+                        nc=cin,
+                        start_sz=start_sz,
+                        end_sz=8,
+                        separable=separable,
+                        patch=patch,
+                    ),
+                ],
+            )
         self.mini_discs = nn.ModuleDict(mini_discs)
 
     def forward(self, features, c):
@@ -148,11 +209,7 @@ class MultiScaleD(nn.Module):
 
 
 class ProjectedDiscriminator(torch.nn.Module):
-    def __init__(
-        self,
-        backbone_kwargs={},
-        **kwargs
-    ):
+    def __init__(self, backbone_kwargs={}, **kwargs):
         super().__init__()
         self.feature_network = F_RandomProj(**backbone_kwargs)
         self.discriminator = MultiScaleD(
@@ -168,7 +225,7 @@ class ProjectedDiscriminator(torch.nn.Module):
 
     def eval(self):
         return self.train(False)
-    
+
     def get_feature(self, x):
         features = self.feature_network(x, get_features=True)
         return features
@@ -178,4 +235,3 @@ class ProjectedDiscriminator(torch.nn.Module):
         logits = self.discriminator(features, c)
 
         return logits, backbone_features
-

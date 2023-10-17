@@ -1,11 +1,11 @@
 import torch
 import torch.nn.functional as F
-from lib import utils
-from lib.model import ModelInterface
-from lib.discriminators import ProjectedDiscriminator
 from core.loss import MyModelLoss
 from core.nets import MyGenerator
 from innerverz import DECA
+from lib import utils
+from lib.discriminators import ProjectedDiscriminator
+from lib.model import ModelInterface
 from SyncNet import SyncNet
 
 

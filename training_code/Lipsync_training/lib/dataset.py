@@ -1,13 +1,12 @@
-import glob
-from PIL import Image
 import random
-from torch.utils.data import Dataset
-import torchvision.transforms as transforms
-from lib import utils
-import torch.nn.functional as F
+
+import cv2
 import numpy as np
 import torch
-import cv2
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+from PIL import Image
+from torch.utils.data import Dataset
 
 
 # color, gray, mask

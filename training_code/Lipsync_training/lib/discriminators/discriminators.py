@@ -1,7 +1,9 @@
-import torch.nn as nn
-import numpy as np
-import torch.nn.functional as F
 import math
+
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+
 
 class LatentCodesDiscriminator(nn.Module):
     def __init__(self, style_dim=512, n_mlp=4):
@@ -10,10 +12,8 @@ class LatentCodesDiscriminator(nn.Module):
         self.style_dim = style_dim
 
         layers = []
-        for i in range(n_mlp-1):
-            layers.append(
-                nn.Linear(style_dim, style_dim)
-            )
+        for i in range(n_mlp - 1):
+            layers.append(nn.Linear(style_dim, style_dim))
             layers.append(nn.LeakyReLU(0.2))
         layers.append(nn.Linear(512, 1))
         self.mlp = nn.Sequential(*layers)
@@ -21,7 +21,7 @@ class LatentCodesDiscriminator(nn.Module):
     def forward(self, w):
         return self.mlp(w)
 
-        
+
 class Discriminator(nn.Module):
     def __init__(self, input_nc=3, norm_layer=nn.InstanceNorm2d, use_sigmoid=False):
         super(Discriminator, self).__init__()
@@ -29,24 +29,28 @@ class Discriminator(nn.Module):
         kw = 4
         padw = 1
         self.down1 = nn.Sequential(
-            nn.Conv2d(input_nc, 64, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)
+            nn.Conv2d(input_nc, 64, kernel_size=kw, stride=2, padding=padw),
+            nn.LeakyReLU(0.2, True),
         )
         self.down2 = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=kw, stride=2, padding=padw),
-            norm_layer(128), nn.LeakyReLU(0.2, True)
+            norm_layer(128),
+            nn.LeakyReLU(0.2, True),
         )
         self.down3 = nn.Sequential(
             nn.Conv2d(128, 256, kernel_size=kw, stride=2, padding=padw),
-            norm_layer(256), nn.LeakyReLU(0.2, True)
+            norm_layer(256),
+            nn.LeakyReLU(0.2, True),
         )
         self.down4 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=kw, stride=2, padding=padw),
-            norm_layer(512), nn.LeakyReLU(0.2, True)
+            norm_layer(512),
+            nn.LeakyReLU(0.2, True),
         )
         self.conv1 = nn.Sequential(
             nn.Conv2d(512, 512, kernel_size=kw, stride=1, padding=padw),
             norm_layer(512),
-            nn.LeakyReLU(0.2, True)
+            nn.LeakyReLU(0.2, True),
         )
 
         if use_sigmoid:
@@ -72,36 +76,54 @@ class Discriminator(nn.Module):
         out.append(x)
         x = self.conv2(x)
         out.append(x)
-        
+
         return out
 
 
 class NLayerDiscriminator(nn.Module):
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.InstanceNorm2d, use_sigmoid=False, getIntermFeat=False):
+    def __init__(
+        self,
+        input_nc,
+        ndf=64,
+        n_layers=3,
+        norm_layer=nn.InstanceNorm2d,
+        use_sigmoid=False,
+        getIntermFeat=False,
+    ):
         super(NLayerDiscriminator, self).__init__()
         self.getIntermFeat = getIntermFeat
         self.n_layers = n_layers
 
         kw = 4
-        padw = int(np.ceil((kw-1.0)/2))
-        sequence = [[nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]]
+        padw = int(np.ceil((kw - 1.0) / 2))
+        sequence = [
+            [
+                nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw),
+                nn.LeakyReLU(0.2, True),
+            ]
+        ]
 
         nf = ndf
         for n in range(1, n_layers):
             nf_prev = nf
             nf = min(nf * 2, 512)
-            sequence += [[
-                nn.Conv2d(nf_prev, nf, kernel_size=kw, stride=2, padding=padw),
-                norm_layer(nf), nn.LeakyReLU(0.2, True)
-            ]]
+            sequence += [
+                [
+                    nn.Conv2d(nf_prev, nf, kernel_size=kw, stride=2, padding=padw),
+                    norm_layer(nf),
+                    nn.LeakyReLU(0.2, True),
+                ]
+            ]
 
         nf_prev = nf
         nf = min(nf * 2, 512)
-        sequence += [[
-            nn.Conv2d(nf_prev, nf, kernel_size=kw, stride=1, padding=padw),
-            norm_layer(nf),
-            nn.LeakyReLU(0.2, True)
-        ]]
+        sequence += [
+            [
+                nn.Conv2d(nf_prev, nf, kernel_size=kw, stride=1, padding=padw),
+                norm_layer(nf),
+                nn.LeakyReLU(0.2, True),
+            ]
+        ]
 
         sequence += [[nn.Conv2d(nf, 1, kernel_size=kw, stride=1, padding=padw)]]
 
@@ -110,7 +132,7 @@ class NLayerDiscriminator(nn.Module):
 
         if getIntermFeat:
             for n in range(len(sequence)):
-                setattr(self, 'model'+str(n), nn.Sequential(*sequence[n]))
+                setattr(self, "model" + str(n), nn.Sequential(*sequence[n]))
         else:
             sequence_stream = []
             for n in range(len(sequence)):
@@ -120,8 +142,8 @@ class NLayerDiscriminator(nn.Module):
     def forward(self, input):
         if self.getIntermFeat:
             res = [input]
-            for n in range(self.n_layers+2):
-                model = getattr(self, 'model'+str(n))
+            for n in range(self.n_layers + 2):
+                model = getattr(self, "model" + str(n))
                 res.append(model(res[-1]))
             return res[1:]
         else:
@@ -129,22 +151,38 @@ class NLayerDiscriminator(nn.Module):
 
 
 class MultiscaleDiscriminator(nn.Module):
-    def __init__(self, input_nc=3, ndf=64, n_layers=6, norm_layer=nn.InstanceNorm2d,
-                 use_sigmoid=False, num_D=3, getIntermFeat=False):
+    def __init__(
+        self,
+        input_nc=3,
+        ndf=64,
+        n_layers=6,
+        norm_layer=nn.InstanceNorm2d,
+        use_sigmoid=False,
+        num_D=3,
+        getIntermFeat=False,
+    ):
         super(MultiscaleDiscriminator, self).__init__()
         self.num_D = num_D
         self.n_layers = n_layers
         self.getIntermFeat = getIntermFeat
 
         for i in range(num_D):
-            netD = NLayerDiscriminator(input_nc, ndf, n_layers, norm_layer, use_sigmoid, getIntermFeat)
+            netD = NLayerDiscriminator(
+                input_nc, ndf, n_layers, norm_layer, use_sigmoid, getIntermFeat
+            )
             if getIntermFeat:
                 for j in range(n_layers + 2):
-                    setattr(self, 'scale' + str(i) + '_layer' + str(j), getattr(netD, 'model' + str(j)))
+                    setattr(
+                        self,
+                        "scale" + str(i) + "_layer" + str(j),
+                        getattr(netD, "model" + str(j)),
+                    )
             else:
-                setattr(self, 'layer' + str(i), netD.model)
+                setattr(self, "layer" + str(i), netD.model)
 
-        self.downsample = nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)
+        self.downsample = nn.AvgPool2d(
+            3, stride=2, padding=[1, 1], count_include_pad=False
+        )
 
     def singleD_forward(self, model, input):
         if self.getIntermFeat:
@@ -161,10 +199,12 @@ class MultiscaleDiscriminator(nn.Module):
         input_downsampled = input
         for i in range(num_D):
             if self.getIntermFeat:
-                model = [getattr(self, 'scale' + str(num_D - 1 - i) + '_layer' + str(j)) for j in
-                         range(self.n_layers + 2)]
+                model = [
+                    getattr(self, "scale" + str(num_D - 1 - i) + "_layer" + str(j))
+                    for j in range(self.n_layers + 2)
+                ]
             else:
-                model = getattr(self, 'layer' + str(num_D - 1 - i))
+                model = getattr(self, "layer" + str(num_D - 1 - i))
             result.append(self.singleD_forward(model, input_downsampled))
             if i != (num_D - 1):
                 input_downsampled = self.downsample(input_downsampled)
@@ -182,7 +222,7 @@ class StarGANv2Discriminator(nn.Module):
         repeat_num = int(np.log2(img_size)) - 2
 
         for _ in range(repeat_num):
-            dim_out = min(dim_in*2, max_conv_dim)
+            dim_out = min(dim_in * 2, max_conv_dim)
             blocks += [ResBlk(dim_in, dim_out, downsample=True)]
             dim_in = dim_out
 
@@ -199,8 +239,9 @@ class StarGANv2Discriminator(nn.Module):
 
 
 class ResBlk(nn.Module):
-    def __init__(self, dim_in, dim_out, actv=nn.LeakyReLU(0.2),
-                 normalize=False, downsample=False):
+    def __init__(
+        self, dim_in, dim_out, actv=nn.LeakyReLU(0.2), normalize=False, downsample=False
+    ):
         super().__init__()
         self.actv = actv
         self.normalize = normalize
@@ -240,5 +281,3 @@ class ResBlk(nn.Module):
     def forward(self, x):
         x = self._shortcut(x) + self._residual(x)
         return x / math.sqrt(2)  # unit variance
-
-

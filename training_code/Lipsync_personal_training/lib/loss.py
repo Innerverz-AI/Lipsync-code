@@ -1,15 +1,17 @@
 import abc
+import time
+
+import lpips  # pip install lpips
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import time
 import torchvision
-import lpips # pip install lpips
+
 
 class LossInterface(metaclass=abc.ABCMeta):
     """
-    Base class for loss of GAN model. Exceptions will be raised when subclass is being 
-    instantiated but abstract methods were not implemented. Concrete methods can be 
+    Base class for loss of GAN model. Exceptions will be raised when subclass is being
+    instantiated but abstract methods were not implemented. Concrete methods can be
     overrided as well if needed.
     """
 
@@ -20,10 +22,10 @@ class LossInterface(metaclass=abc.ABCMeta):
         self.CONFIG = CONFIG
         self.start_time = time.time()
         self.loss_dict = {}
-        self.loss_dict['L_G'] = .0
-        self.loss_dict['L_D'] = .0
-        self.loss_dict['valid_L_G'] = .0
-        self.loss_dict['valid_L_D'] = .0
+        self.loss_dict["L_G"] = 0.0
+        self.loss_dict["L_D"] = 0.0
+        self.loss_dict["valid_L_G"] = 0.0
+        self.loss_dict["valid_L_D"] = 0.0
 
     def print_loss(self):
         """
@@ -31,27 +33,36 @@ class LossInterface(metaclass=abc.ABCMeta):
         """
         seconds = int(time.time() - self.start_time)
         print("")
-        print(f"[ {seconds//3600//24:02}d {(seconds//3600)%24:02}h {(seconds//60)%60:02}m {seconds%60:02}s ]")
-        print(f"steps: {self.CONFIG['BASE']['GLOBAL_STEP']:06} / {self.CONFIG['BASE']['MAX_STEP']}")
+        print(
+            f"[ {seconds//3600//24:02}d {(seconds//3600)%24:02}h {(seconds//60)%60:02}m {seconds%60:02}s ]"
+        )
+        print(
+            f"steps: {self.CONFIG['BASE']['GLOBAL_STEP']:06} / {self.CONFIG['BASE']['MAX_STEP']}"
+        )
         print(f"lossD: {self.loss_dict['L_D']} | lossG: {self.loss_dict['L_G']}")
-    
+
     def val_print_loss(self):
         """
         Print discriminator and generator loss and formatted elapsed time.
         """
         seconds = int(time.time() - self.start_time)
         print("")
-        print(f"[ {seconds//3600//24:02}d {(seconds//3600)%24:02}h {(seconds//60)%60:02}m {seconds%60:02}s ]")
-        print(f"steps: {self.CONFIG['BASE']['GLOBAL_STEP']:06} / {self.CONFIG['BASE']['MAX_STEP']}")
-        print(f"val_lossD: {round(self.loss_dict['valid_L_D'], 4)} | val_lossG: {round(self.loss_dict['valid_L_G'], 4)}")
-
+        print(
+            f"[ {seconds//3600//24:02}d {(seconds//3600)%24:02}h {(seconds//60)%60:02}m {seconds%60:02}s ]"
+        )
+        print(
+            f"steps: {self.CONFIG['BASE']['GLOBAL_STEP']:06} / {self.CONFIG['BASE']['MAX_STEP']}"
+        )
+        print(
+            f"val_lossD: {round(self.loss_dict['valid_L_D'], 4)} | val_lossG: {round(self.loss_dict['valid_L_G'], 4)}"
+        )
 
     @abc.abstractmethod
     def get_loss_G(self):
         """
         Caculate generator loss.
-        Once loss values are saved in self.loss_dict, they can be uploaded on the 
-        dashboard via wandb or printed in self.print_loss. self.print_loss can be 
+        Once loss values are saved in self.loss_dict, they can be uploaded on the
+        dashboard via wandb or printed in self.print_loss. self.print_loss can be
         overrided as needed.
         """
         pass
@@ -60,38 +71,39 @@ class LossInterface(metaclass=abc.ABCMeta):
     def get_loss_D(self):
         """
         Caculate discriminator loss.
-        Once loss values are saved in self.loss_dict, they can be uploaded on the 
-        dashboard via wandb or printed in self.print_loss. self.print_loss can be 
+        Once loss values are saved in self.loss_dict, they can be uploaded on the
+        dashboard via wandb or printed in self.print_loss. self.print_loss can be
         overrided as needed.
         """
         pass
+
 
 class Loss:
     """
     Provide various losses such as LPIPS, L1, L2, BCE and so on.
     """
+
     L1 = torch.nn.L1Loss().to("cuda")
     L2 = torch.nn.MSELoss().to("cuda")
     logloss = nn.BCELoss()
-    
-    
+
     def get_id_loss(a, b):
         return (1 - torch.cosine_similarity(a, b, dim=1)).mean()
 
     @classmethod
     def get_lpips_loss(cls, a, b):
-        if not hasattr(cls, 'lpips'):
-            cls.lpips = lpips.LPIPS(net='vgg').eval().to("cuda") # pip install lpips
+        if not hasattr(cls, "lpips"):
+            cls.lpips = lpips.LPIPS(net="vgg").eval().to("cuda")  # pip install lpips
         return cls.lpips(a, b).mean()
 
     @classmethod
     def get_vgg_loss(cls, a, b):
-        if not hasattr(cls, 'vgg'):
+        if not hasattr(cls, "vgg"):
             cls.vgg = VGGLoss().eval().to("cuda")
         return cls.vgg(a, b)
 
     @classmethod
-    def get_L1_loss(cls, a, b):   
+    def get_L1_loss(cls, a, b):
         return cls.L1(a, b)
 
     @classmethod
@@ -101,7 +113,9 @@ class Loss:
     def get_attr_loss(a, b, batch_size):
         L_attr = 0
         for i in range(len(a)):
-            L_attr += torch.mean(torch.pow((a[i] - b[i]), 2).reshape(batch_size, -1), dim=1).mean()
+            L_attr += torch.mean(
+                torch.pow((a[i] - b[i]), 2).reshape(batch_size, -1), dim=1
+            ).mean()
         L_attr /= 2.0
 
         return L_attr
@@ -121,9 +135,9 @@ class Loss:
 
     def hinge_loss(logit, positive=True):
         if positive:
-            return torch.relu(1-logit).mean()
+            return torch.relu(1 - logit).mean()
         else:
-            return torch.relu(logit+1).mean()
+            return torch.relu(logit + 1).mean()
 
     @classmethod
     def get_hinge_loss(cls, Di, label):
@@ -142,11 +156,14 @@ class Loss:
         # zero-centered gradient penalty for real images
         batch_size = x_in.size(0)
         grad_dout = torch.autograd.grad(
-            outputs=d_out.sum(), inputs=x_in,
-            create_graph=True, retain_graph=True, only_inputs=True
+            outputs=d_out.sum(),
+            inputs=x_in,
+            create_graph=True,
+            retain_graph=True,
+            only_inputs=True,
         )[0]
         grad_dout2 = grad_dout.pow(2)
-        assert(grad_dout2.size() == x_in.size())
+        assert grad_dout2.size() == x_in.size()
         reg = 0.5 * grad_dout2.view(batch_size, -1).sum(1).mean(0)
         return reg
 
@@ -155,14 +172,14 @@ class Loss:
         targets = torch.full_like(logits, fill_value=target)
         loss = F.binary_cross_entropy_with_logits(logits, targets)
         return loss
-    
+
     @classmethod
     def cosine_loss(cls, v, a, y):
         d = nn.functional.cosine_similarity(v, a)
         loss = cls.logloss(d.unsqueeze(1), y)
 
         return loss
-    
+
     # @classmethod
     # def get_sync_loss(cls, image, audio, gt_image, gt_audio):
     #     y = torch.ones(image.shape[0], 1).float().cuda()
@@ -173,17 +190,28 @@ class Loss:
     def get_sync_loss(cls, image, audio):
         y = torch.ones(image.shape[0], 1).float().cuda()
         loss = cls.cosine_loss(audio, image, y)
-        
+
         return loss
 
     @classmethod
     def get_weight_reg_loss(cls, model, prev_model):
         total_pow = 0
-        for i, (p_mid, prev_p_mid) in enumerate(zip(model.synthesis.MiddleResBlks.parameters(), prev_model.synthesis.MiddleResBlks.parameters())):
+        for i, (p_mid, prev_p_mid) in enumerate(
+            zip(
+                model.synthesis.MiddleResBlks.parameters(),
+                prev_model.synthesis.MiddleResBlks.parameters(),
+            )
+        ):
             total_pow += torch.sum((p_mid - prev_p_mid).pow(2.0))
-        for p_up, prev_p_up in zip(model.synthesis.UpResBlks.parameters(), prev_model.synthesis.UpResBlks.parameters()):
+        for p_up, prev_p_up in zip(
+            model.synthesis.UpResBlks.parameters(),
+            prev_model.synthesis.UpResBlks.parameters(),
+        ):
             total_pow += torch.sum((p_up - prev_p_up).pow(2.0))
-        for p_rgb, prev_p_rgb in zip(model.synthesis.ToRGBs.parameters(), prev_model.synthesis.ToRGBs.parameters()):
+        for p_rgb, prev_p_rgb in zip(
+            model.synthesis.ToRGBs.parameters(),
+            prev_model.synthesis.ToRGBs.parameters(),
+        ):
             total_pow += torch.sum((p_rgb - prev_p_rgb).pow(2.0))
         return total_pow
 
@@ -221,6 +249,7 @@ class VGG19(torch.nn.Module):
         out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
         return out
 
+
 # Perceptual loss that uses a pretrained VGG network
 class VGGLoss(nn.Module):
     def __init__(self):
@@ -249,9 +278,9 @@ class LPIPS(nn.Module):
         self.mu = torch.tensor([-0.03, -0.088, -0.188]).view(1, 3, 1, 1).cuda()
         self.sigma = torch.tensor([0.458, 0.448, 0.450]).view(1, 3, 1, 1).cuda()
 
-    def _load_lpips_weights(self, ckpt_path='lib/ckpt/lpips_weights.ckpt'):
+    def _load_lpips_weights(self, ckpt_path="lib/ckpt/lpips_weights.ckpt"):
         own_state_dict = self.state_dict()
-        state_dict = torch.load(ckpt_path, map_location=torch.device('cuda'))
+        state_dict = torch.load(ckpt_path, map_location=torch.device("cuda"))
         for name, param in state_dict.items():
             if name in own_state_dict:
                 own_state_dict[name].copy_(param)
@@ -265,7 +294,7 @@ class LPIPS(nn.Module):
         for x_fmap, y_fmap, conv1x1 in zip(x_fmaps, y_fmaps, self.lpips_weights):
             x_fmap = normalize(x_fmap)
             y_fmap = normalize(y_fmap)
-            lpips_value += torch.mean(conv1x1((x_fmap - y_fmap)**2))
+            lpips_value += torch.mean(conv1x1((x_fmap - y_fmap) ** 2))
 
         return lpips_value
 
@@ -296,8 +325,8 @@ class Conv1x1(nn.Module):
     def __init__(self, in_channels, out_channels=1):
         super().__init__()
         self.main = nn.Sequential(
-            nn.Dropout(0.5),
-            nn.Conv2d(in_channels, out_channels, 1, 1, 0, bias=False))
+            nn.Dropout(0.5), nn.Conv2d(in_channels, out_channels, 1, 1, 0, bias=False)
+        )
 
     def forward(self, x):
         return self.main(x)
