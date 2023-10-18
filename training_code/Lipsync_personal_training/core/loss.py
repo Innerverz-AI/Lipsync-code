@@ -44,26 +44,20 @@ class MyModelLoss(LossInterface):
 
         if self.CONFIG["LOSS"]["W_CYCLE"]:
             L_cycle = Loss.get_L1_loss(
-                run_dict["cycle_color_map"]
-                * (1 - run_dict["source_mask"][:, 0].unsqueeze(1)),
-                run_dict["source_color"]
-                * (1 - run_dict["source_mask"][:, 0].unsqueeze(1)),
+                run_dict["cycle_color_map"] * (1 - run_dict["source_mask"][:, 0].unsqueeze(1)),
+                run_dict["source_color"] * (1 - run_dict["source_mask"][:, 0].unsqueeze(1)),
             )
             L_G += self.CONFIG["LOSS"]["W_CYCLE"] * L_cycle
             self.loss_dict["L_cycle"] = round(L_cycle.item(), 4)
 
         # feat loss for Projected D
         if self.CONFIG["LOSS"]["W_FEAT"]:
-            L_feat = Loss.get_L1_loss(
-                run_dict["g_feat_fake"]["3"], run_dict["g_feat_real"]["3"]
-            )
+            L_feat = Loss.get_L1_loss(run_dict["g_feat_fake"]["3"], run_dict["g_feat_real"]["3"])
             L_G += self.CONFIG["LOSS"]["W_FEAT"] * L_feat
             self.loss_dict["L_feat"] = round(L_feat.item(), 4)
 
         if self.CONFIG["LOSS"]["W_SYNC"]:
-            L_sync = Loss.get_sync_loss(
-                run_dict["img_embedding"], run_dict["mel_embedding"]
-            )
+            L_sync = Loss.get_sync_loss(run_dict["img_embedding"], run_dict["mel_embedding"])
             L_G += self.CONFIG["LOSS"]["W_SYNC"] * L_sync
             self.loss_dict["L_sync"] = round(L_sync.item(), 4)
 

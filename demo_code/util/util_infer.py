@@ -13,9 +13,7 @@ def landmark_smoothing(landmarks):
     return sm_landmarks
 
 
-def get_lmk_imgs(
-    batch_lmk, color=(1, 1, 1), size=2, image_size=256, types="full", device="cuda"
-):
+def get_lmk_imgs(batch_lmk, color=(1, 1, 1), size=2, image_size=256, types="full", device="cuda"):
     lmk_imgs = []
     for lmk in batch_lmk:
         canvas = np.zeros((image_size, image_size, 3)).astype(np.uint8)
@@ -68,8 +66,6 @@ def transfer_lip_params(s_flame_params, d_flame_params):
     return lipysnc_flame_params
 
 
-
-
 def get_convexhull_mask(
     batch_lmk, skin_dilate_iter=5, nose_dilate_iter=8, image_size=256, device="cuda"
 ):
@@ -119,13 +115,9 @@ def get_convexhull_mask(
                     np.int32,
                 )
             )
-            nose_mask = cv2.fillConvexPoly(
-                nose_canvas, points=nose_points, color=(1, 1, 1)
-            )
+            nose_mask = cv2.fillConvexPoly(nose_canvas, points=nose_points, color=(1, 1, 1))
 
-            dilation_nose_mask = cv2.dilate(
-                nose_mask, kernel, iterations=nose_dilate_iter
-            )
+            dilation_nose_mask = cv2.dilate(nose_mask, kernel, iterations=nose_dilate_iter)
             dilation_mask = dilation_skin_mask & (dilation_nose_mask * (-1) + 1)
         else:
             dilation_mask = dilation_skin_mask
@@ -133,6 +125,7 @@ def get_convexhull_mask(
         masks.append(np.expand_dims(dilation_mask.transpose(2, 0, 1), axis=0))
     masks = np.concatenate(masks, axis=0)
     return torch.from_numpy(masks).to(device)
+
 
 # def get_convexhull_mask(batch_lmk, dilate_iter=5, image_size=256, device="cuda"):
 #     masks = []
@@ -164,9 +157,7 @@ def get_batch_image_from_path(opts, image_path_list):
     return _batch_image
 
 
-def get_lmk_imgs(
-    batch_lmk, color=(1, 1, 1), size=2, image_size=256, types="full", device="cuda"
-):
+def get_lmk_imgs(batch_lmk, color=(1, 1, 1), size=2, image_size=256, types="full", device="cuda"):
     lmk_imgs = []
     for lmk in batch_lmk:
         canvas = np.zeros((image_size, image_size, 3)).astype(np.uint8)

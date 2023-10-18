@@ -98,9 +98,7 @@ class MyModel(ModelInterface):
         self.update_net(self.opt_D, loss_D)
 
         # print images
-        self.train_images = [
-            self.train_dict[data_name] for data_name in self.saving_data_names
-        ]
+        self.train_images = [self.train_dict[data_name] for data_name in self.saving_data_names]
 
     def run_G(self, run_dict):
         with torch.no_grad():
@@ -125,17 +123,11 @@ class MyModel(ModelInterface):
                 dim=0,
             )
             run_dict["guide_img"] = torch.cat(
-                [
-                    run_dict["guide_img"][:, i]
-                    for i in range(run_dict["guide_img"].shape[1])
-                ],
+                [run_dict["guide_img"][:, i] for i in range(run_dict["guide_img"].shape[1])],
                 dim=0,
             )
             run_dict["ref_img"] = torch.cat(
-                [
-                    run_dict["ref_img"][:, i]
-                    for i in range(run_dict["ref_img"].shape[1])
-                ],
+                [run_dict["ref_img"][:, i] for i in range(run_dict["ref_img"].shape[1])],
                 dim=0,
             )
             run_dict["hubert_feature"] = torch.cat(
@@ -182,25 +174,19 @@ class MyModel(ModelInterface):
             run_dict["reg_masked_face"] = run_dict["gt_img"] * (1 - reg_blur_mask)
             if self.CONFIG["BASE"]["NO_LMKS"]:
                 run_dict["input"] = (
-                    torch.zeros_like(run_dict["guide_img"]) * blur_mask
-                    + run_dict["masked_face"]
+                    torch.zeros_like(run_dict["guide_img"]) * blur_mask + run_dict["masked_face"]
                 )
                 run_dict["reg_input"] = (
                     torch.zeros_like(run_dict["reg_guide_imgs"]) * reg_blur_mask
                     + run_dict["reg_masked_face"]
                 )
             else:
-                run_dict["input"] = (
-                    run_dict["guide_img"] * blur_mask + run_dict["masked_face"]
-                )
+                run_dict["input"] = run_dict["guide_img"] * blur_mask + run_dict["masked_face"]
                 run_dict["reg_input"] = (
-                    run_dict["reg_guide_imgs"] * reg_blur_mask
-                    + run_dict["reg_masked_face"]
+                    run_dict["reg_guide_imgs"] * reg_blur_mask + run_dict["reg_masked_face"]
                 )
 
-            run_dict["input"] = (
-                run_dict["guide_img"] * blur_mask + run_dict["masked_face"]
-            )
+            run_dict["input"] = run_dict["guide_img"] * blur_mask + run_dict["masked_face"]
             run_dict["reg_input"] = (
                 run_dict["reg_guide_imgs"] * reg_blur_mask + run_dict["reg_masked_face"]
             )
@@ -214,9 +200,7 @@ class MyModel(ModelInterface):
         run_dict["result_img"] = run_dict["output"] * blur_mask + run_dict["gt_img"] * (
             1 - blur_mask
         )  # (B, T, 3, H, W)
-        run_dict["reg_result_img"] = run_dict["reg_output"] * reg_blur_mask + run_dict[
-            "gt_img"
-        ] * (
+        run_dict["reg_result_img"] = run_dict["reg_output"] * reg_blur_mask + run_dict["gt_img"] * (
             1 - reg_blur_mask
         )  # (B, T, 3, H, W)
 
@@ -242,33 +226,23 @@ class MyModel(ModelInterface):
                 ).squeeze()
             )
             sync_imgs_256.append(
-                F.interpolate(
-                    sync_img, size=(img_size, img_size), mode="bilinear"
-                ).squeeze()
+                F.interpolate(sync_img, size=(img_size, img_size), mode="bilinear").squeeze()
             )
             reg_sync_imgs_256.append(
-                F.interpolate(
-                    reg_sync_img, size=(img_size, img_size), mode="bilinear"
-                ).squeeze()
+                F.interpolate(reg_sync_img, size=(img_size, img_size), mode="bilinear").squeeze()
             )
         run_dict["crop_img"] = torch.stack(sync_imgs_256, dim=0)  # 10, 3, 256, 256
-        run_dict["reg_crop_img"] = torch.stack(
-            reg_sync_imgs_256, dim=0
-        )  # 10, 3, 256, 256
+        run_dict["reg_crop_img"] = torch.stack(reg_sync_imgs_256, dim=0)  # 10, 3, 256, 256
         sync_img = torch.stack(sync_imgs, dim=0)  # 10, 3, 224, 224
         reg_sync_img = torch.stack(reg_sync_imgs, dim=0)  # 10, 3, 224, 224
         # sync_img = sync_img[:, :, sync_img.shape[2]//2:]
         sync_img = torch.split(sync_img, sync_img.shape[0] // 5, dim=0)
         reg_sync_img = torch.split(reg_sync_img, reg_sync_img.shape[0] // 5, dim=0)
-        sync_img = (
-            torch.stack(sync_img, dim=2) * 0.5 + 0.5
-        )  # *127.5 + 127.5 # 2, 3, 5, 224, 224
+        sync_img = torch.stack(sync_img, dim=2) * 0.5 + 0.5  # *127.5 + 127.5 # 2, 3, 5, 224, 224
         reg_sync_img = (
             torch.stack(reg_sync_img, dim=2) * 0.5 + 0.5
         )  # *127.5 + 127.5 # 2, 3, 5, 224, 224
-        sync_img = torch.cat(
-            [sync_img[:, :, i] for i in range(5)], dim=1
-        )  # 2, 15, 224, 224
+        sync_img = torch.cat([sync_img[:, :, i] for i in range(5)], dim=1)  # 2, 15, 224, 224
         reg_sync_img = torch.cat(
             [reg_sync_img[:, :, i] for i in range(5)], dim=1
         )  # 2, 15, 224, 224

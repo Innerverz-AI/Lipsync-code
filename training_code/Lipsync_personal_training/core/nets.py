@@ -23,9 +23,7 @@ class PixelNorm(nn.Module):
 
 
 class EqualLinear(nn.Module):
-    def __init__(
-        self, in_dim, out_dim, bias=True, bias_init=0, lr_mul=1, activation=None
-    ):
+    def __init__(self, in_dim, out_dim, bias=True, bias_init=0, lr_mul=1, activation=None):
         super().__init__()
 
         self.weight = nn.Parameter(torch.randn(out_dim, in_dim).div_(lr_mul))
@@ -47,16 +45,12 @@ class EqualLinear(nn.Module):
             out = fused_leaky_relu(out, self.bias * self.lr_mul)
 
         else:
-            out = F.linear(
-                input, self.weight * self.scale, bias=self.bias * self.lr_mul
-            )
+            out = F.linear(input, self.weight * self.scale, bias=self.bias * self.lr_mul)
 
         return out
 
     def __repr__(self):
-        return (
-            f"{self.__class__.__name__}({self.weight.shape[1]}, {self.weight.shape[0]})"
-        )
+        return f"{self.__class__.__name__}({self.weight.shape[1]}, {self.weight.shape[0]})"
 
 
 class Generator(nn.Module):
@@ -90,13 +84,9 @@ class Generator(nn.Module):
                 [256, 64],
             ]:
                 self.UpResBlks.append(
-                    AdaINResBlock(
-                        in_channel, out_channel, scale_factor=2, style_dim=style_dim
-                    )
+                    AdaINResBlock(in_channel, out_channel, scale_factor=2, style_dim=style_dim)
                 )
-                self.ToRGBs.append(
-                    nn.Conv2d(out_channel, 3, kernel_size=3, stride=1, padding=1)
-                )
+                self.ToRGBs.append(nn.Conv2d(out_channel, 3, kernel_size=3, stride=1, padding=1))
         else:
             for in_channel, out_channel in [
                 [512, 512],
@@ -105,13 +95,9 @@ class Generator(nn.Module):
                 [128, 64],
             ]:
                 self.UpResBlks.append(
-                    AdaINResBlock(
-                        in_channel, out_channel, scale_factor=2, style_dim=style_dim
-                    )
+                    AdaINResBlock(in_channel, out_channel, scale_factor=2, style_dim=style_dim)
                 )
-                self.ToRGBs.append(
-                    nn.Conv2d(out_channel, 3, kernel_size=3, stride=1, padding=1)
-                )
+                self.ToRGBs.append(nn.Conv2d(out_channel, 3, kernel_size=3, stride=1, padding=1))
 
     def run_encoder(self, image):
         feat = self.input_layer(image)
@@ -207,9 +193,7 @@ class MyGenerator(nn.Module):
         layers = [PixelNorm()]
         layers += [EqualLinear(1000, 512, lr_mul=lr_mlp, activation="fused_lrelu")]
         for i in range(n_mlp - 1):
-            layers.append(
-                EqualLinear(512, 512, lr_mul=lr_mlp, activation="fused_lrelu")
-            )
+            layers.append(EqualLinear(512, 512, lr_mul=lr_mlp, activation="fused_lrelu"))
         self.expression_mapping = nn.Sequential(*layers)
 
     def get_exp_vector(self, image):
@@ -229,9 +213,7 @@ class MyGenerator(nn.Module):
         return feat
 
     def run_decoder(self, feat, audio_feature, ref_img=None):
-        audio_embedding = self.audio_encoder(
-            audio_feature
-        )  # (B*T, 1, 768, 9) -> (B*T, 512, 1, 1)
+        audio_embedding = self.audio_encoder(audio_feature)  # (B*T, 1, 768, 9) -> (B*T, 512, 1, 1)
         audio_embedding = audio_embedding.view(
             audio_embedding.shape[0], -1
         )  # (B*T, 512, 1, 1) -> (B*T, 512)
@@ -241,9 +223,7 @@ class MyGenerator(nn.Module):
             assert ref_img == None, "ref_img is not None"
             outputs = self.synthesis.run_decoder(feat, audio_feature)
         else:
-            ref_vector = self.get_exp_vector(
-                ref_img
-            )  # (B*T, 512) + (B*T, 512) = (B*T*2, 512)
+            ref_vector = self.get_exp_vector(ref_img)  # (B*T, 512) + (B*T, 512) = (B*T*2, 512)
             cat_vector = torch.cat((audio_embedding, ref_vector), dim=-1)
 
             outputs = self.synthesis.run_decoder(feat, cat_vector)
@@ -317,9 +297,7 @@ class SyncNet(nn.Module):
             Conv2d(512, 512, kernel_size=1, stride=1, padding=0),
         )
 
-    def forward(
-        self, face_sequences, audio_sequences
-    ):  # audio_sequences := (B, dim, T)
+    def forward(self, face_sequences, audio_sequences):  # audio_sequences := (B, dim, T)
         face_embedding = self.face_encoder(face_sequences)
         audio_embedding = self.audio_encoder(audio_sequences)
 
@@ -383,9 +361,7 @@ class S(nn.Module):
             nn.BatchNorm3d(96),
             nn.ReLU(inplace=True),
             nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2)),
-            nn.Conv3d(
-                96, 256, kernel_size=(1, 5, 5), stride=(1, 2, 2), padding=(0, 1, 1)
-            ),
+            nn.Conv3d(96, 256, kernel_size=(1, 5, 5), stride=(1, 2, 2), padding=(0, 1, 1)),
             nn.BatchNorm3d(256),
             nn.ReLU(inplace=True),
             nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 2, 2), padding=(0, 1, 1)),

@@ -1,7 +1,6 @@
 import argparse
 import os
 import random
-import time
 from glob import glob
 from os.path import basename, dirname, isfile, join
 
@@ -12,7 +11,7 @@ import torch.backends.cudnn as cudnn
 
 # import audio
 import wandb
-from hparams import get_image_list, hparams
+from hparams import hparams
 from innerverz import FaceAligner
 from models import SyncNet_color as SyncNet
 from PIL import Image
@@ -20,27 +19,39 @@ from torch import nn, optim
 from torch.utils import data as data_utils
 from tqdm import tqdm
 
-FA_3D = FaceAligner(size=256, lmk_type='3D')
+FA_3D = FaceAligner(size=256, lmk_type="3D")
 
 run = wandb.init(
-# Set the project where this run will be logged
-project="SyncNet - Wav2Lip",
-# Track hyperparameters and run metadata
-config={
-    "dataset": 'Voxceleb2',
-},
-tags={
-    'bbox_face',
-    'mel'
-}
+    # Set the project where this run will be logged
+    project="SyncNet - Wav2Lip",
+    # Track hyperparameters and run metadata
+    config={
+        "dataset": "Voxceleb2",
+    },
+    tags={"bbox_face", "mel"},
 )
-parser = argparse.ArgumentParser(description='Code to train the expert lip-sync discriminator')
+parser = argparse.ArgumentParser(description="Code to train the expert lip-sync discriminator")
 
-parser.add_argument("--train_data_root", help="Root folder of the preprocessed LRS2 dataset", default='/ssd2t/DATASET/VoxCeleb2/1url_1video/512over')
-parser.add_argument("--test_data_root", help="Root folder of the preprocessed LRS2 dataset", default='/ssd2t/DATASET/VoxCeleb2/1url_1video/512over')
+parser.add_argument(
+    "--train_data_root",
+    help="Root folder of the preprocessed LRS2 dataset",
+    default="/ssd2t/DATASET/VoxCeleb2/1url_1video/512over",
+)
+parser.add_argument(
+    "--test_data_root",
+    help="Root folder of the preprocessed LRS2 dataset",
+    default="/ssd2t/DATASET/VoxCeleb2/1url_1video/512over",
+)
 
-parser.add_argument('--checkpoint_dir', help='Save checkpoints to this directory', default='./train_results_add_dataset_demo_Oct6', type=str)
-parser.add_argument('--checkpoint_path', help='Resumed from this checkpoint', default=None, type=str)
+parser.add_argument(
+    "--checkpoint_dir",
+    help="Save checkpoints to this directory",
+    default="./train_results_add_dataset_demo_Oct6",
+    type=str,
+)
+parser.add_argument(
+    "--checkpoint_path", help="Resumed from this checkpoint", default=None, type=str
+)
 
 args = parser.parse_args()
 
@@ -48,7 +59,7 @@ args = parser.parse_args()
 global_step = 0
 global_epoch = 0
 use_cuda = torch.cuda.is_available()
-print('use_cuda: {}'.format(use_cuda))
+print("use_cuda: {}".format(use_cuda))
 
 syncnet_T = 5
 syncnet_mel_step_size = 16
@@ -60,26 +71,27 @@ class Dataset(object):
         self.all_videos = self.get_image_list(data_root, type)
 
     def get_image_list(self, data_root, type):
-        face_folder_list, errors = [], ''
-        count = 0 
-        
+        face_folder_list, errors = [], ""
+        count = 0
+
         if type == "train":
             id_names = sorted(os.listdir(data_root))[5:]
             for id_name in tqdm(id_names):
                 url_ids = sorted(os.listdir(os.path.join(data_root, id_name)))
                 for url_id in url_ids:
-                    
                     trim_list = sorted(os.listdir(os.path.join(data_root, id_name, url_id)))
                     for trim in trim_list:
                         # try:
-                            frames_folder_path = os.path.join(data_root, id_name, url_id, trim)
-                            face_path_list = sorted(glob(os.path.join(frames_folder_path,'aligned_imgs/*.*')))
-                            
-                            frames_num = len(face_path_list)
-                            for face_path in face_path_list:
-                                face_folder_list.append([face_path, frames_num])
-                                
-                            count += frames_num
+                        frames_folder_path = os.path.join(data_root, id_name, url_id, trim)
+                        face_path_list = sorted(
+                            glob(os.path.join(frames_folder_path, "aligned_imgs/*.*"))
+                        )
+
+                        frames_num = len(face_path_list)
+                        for face_path in face_path_list:
+                            face_folder_list.append([face_path, frames_num])
+
+                        count += frames_num
         else:
             # WARNING
             id_names = sorted(os.listdir(data_root))[:5]
@@ -87,18 +99,19 @@ class Dataset(object):
             for id_name in tqdm(id_names):
                 url_ids = sorted(os.listdir(os.path.join(data_root, id_name)))
                 for url_id in url_ids:
-                    
                     trim_list = sorted(os.listdir(os.path.join(data_root, id_name, url_id)))
                     for trim in trim_list:
                         # try:
-                            frames_folder_path = os.path.join(data_root, id_name, url_id, trim)
-                            face_path_list = sorted(glob(os.path.join(frames_folder_path,'aligned_imgs/*.*')))
-                            
-                            frames_num = len(face_path_list)
-                            for face_path in face_path_list:
-                                face_folder_list.append([face_path, frames_num])
-                                
-                            count += 1
+                        frames_folder_path = os.path.join(data_root, id_name, url_id, trim)
+                        face_path_list = sorted(
+                            glob(os.path.join(frames_folder_path, "aligned_imgs/*.*"))
+                        )
+
+                        frames_num = len(face_path_list)
+                        for face_path in face_path_list:
+                            face_folder_list.append([face_path, frames_num])
+
+                        count += 1
 
         return face_folder_list
 
@@ -134,63 +147,64 @@ class Dataset(object):
             try:
                 idx = random.randint(0, len(self.all_videos) - 1)
                 face_path, image_amount = self.all_videos[idx]
-                folder_path = face_path.split('/')[:-2]
-                folder_path = '/'.join(folder_path)
+                folder_path = face_path.split("/")[:-2]
+                folder_path = "/".join(folder_path)
                 # audio
                 # 1s 25fps / 0.2 16 -> 1 80
-                mel_path = os.path.join(folder_path, 'mel', '000000.npy')
+                mel_path = os.path.join(folder_path, "mel", "000000.npy")
                 mel = np.load(mel_path)
 
                 # check min duration
                 video_duration = image_amount / 25
                 audio_duration = mel.shape[0] / 80
                 min_duration = min(video_duration, audio_duration)
-                
+
                 image_amount = int(min_duration * 25)
-                
-                image_num = random.choice(range(image_amount-10))
-                
-                start_mel_id = int(image_num/25*80)
-                _mel = mel[start_mel_id:start_mel_id+16] # 1 80 16 / 1 80 0
+
+                image_num = random.choice(range(image_amount - 10))
+
+                start_mel_id = int(image_num / 25 * 80)
+                _mel = mel[start_mel_id : start_mel_id + 16]  # 1 80 16 / 1 80 0
                 _mel = torch.FloatTensor(_mel.T).unsqueeze(0)
                 assert _mel.shape[-1] == 16
-                
-                # frames                
-                
+
+                # frames
+
                 if random.choice([True, False]):
                     y = torch.ones(1).float()
                     chosen_image_num = image_num
                 else:
-                    wrong_image_num = random.choice(range(image_amount-6))
+                    wrong_image_num = random.choice(range(image_amount - 6))
                     while wrong_image_num == image_num:
-                        wrong_image_num = random.choice(range(image_amount-6))
+                        wrong_image_num = random.choice(range(image_amount - 6))
 
                     y = torch.zeros(1).float()
                     chosen_image_num = wrong_image_num
 
                 image_list = []
                 for i in range(5):
-                    chosen_image_file = str(chosen_image_num+i).zfill(6) + '.png'
-                    file_path = os.path.join(folder_path, 'aligned_imgs', chosen_image_file)
+                    chosen_image_file = str(chosen_image_num + i).zfill(6) + ".png"
+                    file_path = os.path.join(folder_path, "aligned_imgs", chosen_image_file)
                     face = cv2.imread(file_path)
                     face = cv2.resize(face, (256, 256))
                     face = face[:, 128 - 64 : 128 + 64]
                     _face = cv2.resize(face, (hparams.img_size, hparams.img_size))
                     image_list.append(_face)
-                    
+
                 x = np.concatenate(image_list, axis=2) / 255.0
                 x = x.transpose(2, 0, 1)
                 x = x[:, x.shape[1] // 2 :]
                 x = torch.FloatTensor(x)
 
-                
                 # if _mel.shape[-1] == 0:
                 # print(image_amount, image_name, start_mel_id, mel.shape, _mel.shape)
                 return x, _mel, y
             except:
                 continue
 
+
 logloss = nn.BCELoss()
+
 
 def cosine_loss(a, v, y):
     d = nn.functional.cosine_similarity(a, v)
@@ -224,7 +238,7 @@ def train(
             mel = mel.to(device)
 
             a, v = model(mel, x)
-            
+
             y = y.to(device)
 
             loss = cosine_loss(a, v, y)
@@ -236,15 +250,11 @@ def train(
             running_loss += loss.item()
 
             if global_step == 1 or global_step % checkpoint_interval == 0:
-                save_checkpoint(
-                    model, optimizer, global_step, checkpoint_dir, global_epoch
-                )
+                save_checkpoint(model, optimizer, global_step, checkpoint_dir, global_epoch)
 
             if global_step % hparams.syncnet_eval_interval == 0:
                 with torch.no_grad():
-                    eval_model(
-                        test_data_loader, global_step, device, model, checkpoint_dir
-                    )
+                    eval_model(test_data_loader, global_step, device, model, checkpoint_dir)
 
             prog_bar.set_description("Loss: {}".format(running_loss / (step + 1)))
 
@@ -304,9 +314,7 @@ def eval_model(test_data_loader, global_step, device, model, checkpoint_dir):
 
 
 def save_checkpoint(model, optimizer, step, checkpoint_dir, epoch):
-    checkpoint_path = join(
-        checkpoint_dir, "checkpoint_step{:09d}.pth".format(global_step)
-    )
+    checkpoint_path = join(checkpoint_dir, "checkpoint_step{:09d}.pth".format(global_step))
     optimizer_state = optimizer.state_dict() if hparams.save_optimizer_state else None
     torch.save(
         {
@@ -324,9 +332,7 @@ def _load(checkpoint_path):
     if use_cuda:
         checkpoint = torch.load(checkpoint_path)
     else:
-        checkpoint = torch.load(
-            checkpoint_path, map_location=lambda storage, loc: storage
-        )
+        checkpoint = torch.load(checkpoint_path, map_location=lambda storage, loc: storage)
     return checkpoint
 
 

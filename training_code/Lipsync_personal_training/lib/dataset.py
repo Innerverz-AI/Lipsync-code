@@ -34,9 +34,7 @@ class DatasetInterface(Dataset):
         return img
 
     def pp_label(self, label_path, flip=False):
-        mask = Image.open(label_path).resize(
-            (self.img_size, self.img_size), Image.NEAREST
-        )
+        mask = Image.open(label_path).resize((self.img_size, self.img_size), Image.NEAREST)
 
         if flip:
             mask = mask.transpose(Image.FLIP_LEFT_RIGHT)

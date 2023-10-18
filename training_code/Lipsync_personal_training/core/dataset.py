@@ -63,8 +63,7 @@ class MyDataset(DatasetInterface):
                     or reg_video_url_name in self.forbidden_list
                     or file_name + 5 > self.frame_num_per_video
                     or reg_file_name + 5 > self.frame_num_per_video
-                    or os.path.dirname(os.path.dirname(gt_img_path))
-                    in self.multi_det_list
+                    or os.path.dirname(os.path.dirname(gt_img_path)) in self.multi_det_list
                 ):
                     continue
 
@@ -94,9 +93,7 @@ class MyDataset(DatasetInterface):
                 # ref_idx = random.randint(0,len(video_frames_path_list)-6)
                 for i in range(T):
                     gt_img_paths.append(
-                        gt_img_path.replace(
-                            "%06d" % file_name, "%06d" % (file_name + i)
-                        )
+                        gt_img_path.replace("%06d" % file_name, "%06d" % (file_name + i))
                     )
                     lmk_paths.append(
                         os.path.splitext(
@@ -116,18 +113,14 @@ class MyDataset(DatasetInterface):
                     )
                     reg_param_paths.append(
                         os.path.splitext(
-                            reg_gt_img_path.replace(
-                                "aligned_imgs", "flame_params"
-                            ).replace(
+                            reg_gt_img_path.replace("aligned_imgs", "flame_params").replace(
                                 "%06d" % reg_file_name, "%06d" % (reg_file_name + i)
                             )
                         )[0]
                         + ".npy"
                     )
                     ref_img_paths.append(
-                        ref_img_path.replace(
-                            "%06d" % ref_file_name, "%06d" % (ref_file_name + i)
-                        )
+                        ref_img_path.replace("%06d" % ref_file_name, "%06d" % (ref_file_name + i))
                     )
 
                 # init data list
@@ -164,8 +157,7 @@ class MyDataset(DatasetInterface):
                 reg_mel_features.append(
                     reg_hubert_all[
                         :,
-                        int(reg_file_name / 25 * 80) : int(reg_file_name / 25 * 80)
-                        + 16,
+                        int(reg_file_name / 25 * 80) : int(reg_file_name / 25 * 80) + 16,
                     ].unsqueeze(0)
                 )
                 if (
@@ -186,18 +178,14 @@ class MyDataset(DatasetInterface):
                         3,
                         -1,
                     )
-                    lmk_image = Image.fromarray(lmk_image.astype(np.uint8)).convert(
-                        "RGB"
-                    )
+                    lmk_image = Image.fromarray(lmk_image.astype(np.uint8)).convert("RGB")
                     guide_imgs.append(self.tf_color(lmk_image).unsqueeze(0))
                     gt_imgs.append(self.pp_image(gt_img_paths[i]).unsqueeze(0))
                     ref_imgs.append(self.pp_image(ref_img_paths[i]).unsqueeze(0))
                     start_id = int(file_name / 25 * 80)  # melmel
                     reg_start_id = int(reg_file_name / 25 * 80)  # melmel
                     hubert_features.append(
-                        hubert_all[
-                            :, (start_id - 1 + i) : (start_id - 1 + i) + 16
-                        ].unsqueeze(0)
+                        hubert_all[:, (start_id - 1 + i) : (start_id - 1 + i) + 16].unsqueeze(0)
                     )  # melmel
                     reg_hubert_features.append(
                         reg_hubert_all[
@@ -205,24 +193,16 @@ class MyDataset(DatasetInterface):
                         ].unsqueeze(0)
                     )  # melmel
                     tmp_params = np.load(param_paths[i], allow_pickle=True).item()
-                    reg_tmp_params = np.load(
-                        reg_param_paths[i], allow_pickle=True
-                    ).item()
+                    reg_tmp_params = np.load(reg_param_paths[i], allow_pickle=True).item()
                     for key in flame_params.keys():
-                        flame_params[key].append(
-                            torch.from_numpy(tmp_params[key]).unsqueeze(0)
-                        )
+                        flame_params[key].append(torch.from_numpy(tmp_params[key]).unsqueeze(0))
                         reg_flame_params[key].append(
                             torch.from_numpy(reg_tmp_params[key]).unsqueeze(0)
                         )
                         reg_crossid_params[key].append(flame_params[key][-1].clone())
-                    reg_crossid_params["pose"][i][:, 3] = reg_flame_params["pose"][i][
-                        :, 3
-                    ]
+                    reg_crossid_params["pose"][i][:, 3] = reg_flame_params["pose"][i][:, 3]
                     reg_crossid_params["exp"][i] = reg_flame_params["exp"][i]
-                    flame_params["pose"][i][:, 3] = (
-                        flame_params["pose"][i][:, 3] + jaw_noise
-                    )
+                    flame_params["pose"][i][:, 3] = flame_params["pose"][i][:, 3] + jaw_noise
 
                 gt_imgs = torch.cat(gt_imgs, dim=0)  # T, 3, H, W
                 guide_imgs = torch.cat(guide_imgs, dim=0)  # T, 3, H, W
@@ -232,9 +212,7 @@ class MyDataset(DatasetInterface):
                 mel_features = torch.cat(mel_features, dim=0)  # 1, 80, 16
                 reg_mel_features = torch.cat(reg_mel_features, dim=0)  # 1, 80, 16
                 for key in flame_params.keys():
-                    flame_params[key] = torch.cat(
-                        flame_params[key], dim=0
-                    )  # T, param_dim
+                    flame_params[key] = torch.cat(flame_params[key], dim=0)  # T, param_dim
                     reg_crossid_params[key] = torch.cat(
                         reg_crossid_params[key], dim=0
                     )  # T, param_dim
