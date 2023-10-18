@@ -12,4 +12,4 @@ jobs:
         uses: chartboost/ruff-action@v1
         with:
           src: "."
-          version: 0.0.290
+          version: 0.1.0

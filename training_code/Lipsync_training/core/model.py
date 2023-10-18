@@ -1,13 +1,10 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms.functional as ttf
-from lib import utils
-from lib.model import ModelInterface
-from lib.discriminators import ProjectedDiscriminator
 from core.loss import MyModelLoss
-from core.nets import MyGenerator, S
+from core.nets import MyGenerator
 from innerverz import DECA
+from lib.discriminators import ProjectedDiscriminator
+from lib.model import ModelInterface
 from lib.utils import get_convexhull_mask
 from SyncNet import SyncNet
 
@@ -155,11 +152,7 @@ class MyModel(ModelInterface):
             sync_img = run_dict["result_img"][i][
                 :, img_size // 2 :, img_size // 4 : img_size // 4 + img_size // 2
             ].unsqueeze(0)
-            sync_imgs.append(
-                F.interpolate(
-                    sync_img, size=(img_size // 4, img_size // 2), mode="bilinear"
-                ).squeeze()
-            )
+            sync_imgs.append(sync_img.squeeze())
             sync_imgs_256.append(
                 F.interpolate(
                     sync_img, size=(img_size, img_size), mode="bilinear"
@@ -173,7 +166,6 @@ class MyModel(ModelInterface):
         sync_img = torch.cat(
             [sync_img[:, :, i] for i in range(5)], dim=1
         )  # B,3*T, H, W
-        print(sync_img.shape)
         run_dict["mel_embedding"], run_dict["img_embedding"] = self.S(
             run_dict["syncnet_feature"], sync_img
         )

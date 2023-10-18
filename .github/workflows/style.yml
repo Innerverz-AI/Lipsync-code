@@ -13,4 +13,15 @@ jobs:
         with:
           options: '--check --verbose'
           src: '.'
-          version: '~= 22.12.0'
+          version: '~= 23.9.1'
+
+  isort:
+      name: isort
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v3
+      - name: Check isort
+        uses: isort/isort-action@v1
+        with:
+            isort-version: "5.12.0"
+            requirements-files: "requirements.txt requirements_dev.txt"

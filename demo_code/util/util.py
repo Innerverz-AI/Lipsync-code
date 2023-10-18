@@ -34,9 +34,7 @@ def setting_pp_init(opts):
 
     opts.frame_save_path = os.path.join(opts.pp_save_path, "frames")
     opts.face_save_path = os.path.join(opts.pp_save_path, "faces")
-    opts.trans_landmark2d_save_path = os.path.join(
-        opts.pp_save_path, "trans_landmark2d.npy"
-    )
+    opts.trans_landmark2d_save_path = os.path.join(opts.pp_save_path, "trans_landmark2d.npy")
     opts.face_bool_save_path = os.path.join(opts.pp_save_path, "face_bool.npy")
     opts.lmks_save_path = os.path.join(opts.pp_save_path, "lmks.npy")
     opts.tfm_inv_save_path = os.path.join(opts.pp_save_path, "tfm_inv.npy")
@@ -58,9 +56,7 @@ def get_video_info(
     folder_path,
     folder_name,
 ):
-    frame_paths = sorted(
-        glob.glob(os.path.join(folder_path, folder_name, "frames/*.*"))
-    )
+    frame_paths = sorted(glob.glob(os.path.join(folder_path, folder_name, "frames/*.*")))
     face_paths = sorted(glob.glob(os.path.join(folder_path, folder_name, "faces/*.*")))
     deca_path = os.path.join(folder_path, folder_name, "deca_params.npy")
     face_bool_path = os.path.join(folder_path, folder_name, "face_bool.npy")
@@ -174,12 +170,8 @@ def get_lipsync_deca_param(opts):
     source_deca_params = np.load(opts.source_deca_path, allow_pickle=True)
     # load pp data
     lipsync_deca_params = []
-    for driving_deca_param, source_deca_param in zip(
-        driving_deca_params, source_deca_params
-    ):
-        lipsync_flame_params = transfer_lip_params(
-            source_deca_param, driving_deca_param
-        )
+    for driving_deca_param, source_deca_param in zip(driving_deca_params, source_deca_params):
+        lipsync_flame_params = transfer_lip_params(source_deca_param, driving_deca_param)
         lipsync_deca_params.append(lipsync_flame_params)
 
     return source_deca_params, lipsync_deca_params
@@ -215,9 +207,7 @@ def get_batch_size_mel_data(data_path, duration, mel_size=16):  ### 0.2s
     for index in range(1, data.shape[1], mel_size):  # 10
         stack = []
         for a_index in range(5):
-            segment_data = data[
-                None, :, index - 1 + a_index : index - 1 + a_index + mel_size
-            ]
+            segment_data = data[None, :, index - 1 + a_index : index - 1 + a_index + mel_size]
             if segment_data.shape[-1] != 16:
                 pad_amount = 16 - segment_data.shape[-1]
                 pad_value = segment_data[:, :, -1:].repeat(1, 1, pad_amount)
@@ -230,9 +220,7 @@ def set_generators(opts, source_deca_params, lipsync_deca_params, min_duration):
     sv_face_generator = get_batch_size_data(opts.source_face_paths[:min_duration])
     sv_deca_generator = get_batch_size_data(source_deca_params[:min_duration])
     lipsync_deca_generator = get_batch_size_data(lipsync_deca_params[:min_duration])
-    mel_generator = get_batch_size_mel_data(
-        opts.driving_mel_path, int(min_duration / 25 * 80)
-    )
+    mel_generator = get_batch_size_mel_data(opts.driving_mel_path, int(min_duration / 25 * 80))
     return (
         sv_face_generator,
         sv_deca_generator,

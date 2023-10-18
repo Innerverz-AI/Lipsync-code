@@ -30,9 +30,7 @@ def save(opts, results, inputs, tmp):
         cv2.imwrite(os.path.join(opts.save_path, "results", frame_name), _tmp)
         cv2.imwrite(os.path.join(opts.save_path, "result_faces", frame_name), result)
 
-        cv2.imwrite(
-            os.path.join(opts.save_path, "result_frames", frame_name), blend_frame
-        )
+        cv2.imwrite(os.path.join(opts.save_path, "result_frames", frame_name), blend_frame)
 
 
 def run(opts, generators, DC):
@@ -48,16 +46,20 @@ def run(opts, generators, DC):
 
         # get convexhull
         sv_masks = util_infer.get_convexhull_mask(
-            sv_lmks, skin_dilate_iter=opts.skin_dilate_iter, nose_dilate_iter=opts.nose_dilate_iter, device="cpu"
+            sv_lmks,
+            skin_dilate_iter=opts.skin_dilate_iter,
+            nose_dilate_iter=opts.nose_dilate_iter,
+            device="cpu",
         )
         lipsync_masks = util_infer.get_convexhull_mask(
-            lipsync_sm_lmks, skin_dilate_iter=opts.skin_dilate_iter, nose_dilate_iter=opts.nose_dilate_iter, device="cpu"
+            lipsync_sm_lmks,
+            skin_dilate_iter=opts.skin_dilate_iter,
+            nose_dilate_iter=opts.nose_dilate_iter,
+            device="cpu",
         )
         mask = sv_masks | lipsync_masks
         dilate_mask = util.get_blend_mask(np.array(mask.permute([0, 2, 3, 1])))
-        lipsync_lmks_vis = util_infer.get_lmk_imgs(
-            lipsync_sm_lmks, types="sparse", device="cpu"
-        )
+        lipsync_lmks_vis = util_infer.get_lmk_imgs(lipsync_sm_lmks, types="sparse", device="cpu")
         input_images = sv_face_batch * (1 - mask) + mask * lipsync_lmks_vis
 
         _input_images = input_images.to("cuda")
@@ -68,24 +70,18 @@ def run(opts, generators, DC):
         _results = results.cpu() * dilate_mask + sv_face_batch * (1 - dilate_mask)
 
         results = (
-            results.clone().detach().permute([0, 2, 3, 1]).cpu().numpy()[:, :, :, ::-1]
-            * 127.5
+            results.clone().detach().permute([0, 2, 3, 1]).cpu().numpy()[:, :, :, ::-1] * 127.5
             + 127.5
         )
         tmp.extend(results)
 
         _results = (
-            _results.clone().detach().permute([0, 2, 3, 1]).cpu().numpy()[:, :, :, ::-1]
-            * 127.5
+            _results.clone().detach().permute([0, 2, 3, 1]).cpu().numpy()[:, :, :, ::-1] * 127.5
             + 127.5
         )
         result_all.extend(_results)
         _input_imagess = (
-            _input_images.clone()
-            .detach()
-            .permute([0, 2, 3, 1])
-            .cpu()
-            .numpy()[:, :, :, ::-1]
+            _input_images.clone().detach().permute([0, 2, 3, 1]).cpu().numpy()[:, :, :, ::-1]
             * 127.5
             + 127.5
         )
@@ -97,13 +93,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # inference options
-    parser.add_argument(
-        "--driving_pp_path", type=str, default="../assets/pp_data"
-    )
+    parser.add_argument("--driving_pp_path", type=str, default="../assets/pp_data")
     parser.add_argument("--source_pp_path", type=str, default="../assets/pp_data")
-    parser.add_argument(
-        "--video_path", type=str, default="../assets/synced_videos"
-    )
+    parser.add_argument("--video_path", type=str, default="../assets/synced_videos")
     # parser.add_argument("--video_path", type=str, default="./assets/demo_crop_videos")
     parser.add_argument(
         "--save_root",
@@ -116,7 +108,7 @@ if __name__ == "__main__":
     parser.add_argument("--fps", type=int, default=25)
     parser.add_argument("--image_size", type=int, default=256)
     parser.add_argument("--skin_dilate_iter", type=int, default=5)
-    parser.add_argument("--nose_dilate_iter", type=int, default=8) # 0
+    parser.add_argument("--nose_dilate_iter", type=int, default=8)  # 0
 
     # lipsync model options
     parser.add_argument("--frame_amount", type=int, default=5)
@@ -161,9 +153,7 @@ if __name__ == "__main__":
                     args.source_face_bool_path,
                     _,
                     args.source_tfm_inv_path,
-                ) = util.get_video_info(
-                    args, args.source_pp_path, source_clip_crop_name
-                )
+                ) = util.get_video_info(args, args.source_pp_path, source_clip_crop_name)
 
                 (
                     args.driving_frame_paths,
@@ -172,18 +162,14 @@ if __name__ == "__main__":
                     _,
                     args.driving_mel_path,
                     _,
-                ) = util.get_video_info(
-                    args, args.driving_pp_path, driving_clip_crop_name
-                )
+                ) = util.get_video_info(args, args.driving_pp_path, driving_clip_crop_name)
 
                 (
                     source_deca_params,
                     lipsync_deca_params,
                 ) = util.get_lipsync_deca_param(args)
 
-                args.min_duration = min(
-                    len(args.source_frame_paths), len(args.driving_frame_paths)
-                )
+                args.min_duration = min(len(args.source_frame_paths), len(args.driving_frame_paths))
                 generators = util.set_generators(
                     args, source_deca_params, lipsync_deca_params, args.min_duration
                 )

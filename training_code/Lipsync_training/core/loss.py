@@ -1,6 +1,5 @@
-from lib.loss import Loss, LossInterface
 import torch.nn.functional as F
-import time
+from lib.loss import Loss, LossInterface
 
 
 class MyModelLoss(LossInterface):

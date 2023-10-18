@@ -3,15 +3,16 @@
         MODEL_ID: 'LIPSYNC', 
         SAME_PROB: 0,
         BATCH_PER_GPU: 3,
-        MAX_STEP: 400000,
+        MAX_STEP: 100000,
         SAVE_ROOT: 'train_results',
         PACKAGES_PATH: '../PACKAGES',
-        FRAME_NUM_PER_VIDEO: 100,
+        FRAME_NUM_PER_VIDEO: 10000,
         VAL_SIZE: 0,
         VAL_STEP: 0,
         IMG_SIZE: 256,
         RUN_ID: 'test',
         OPT_URL: ['taylorsync1', 'taylorsync2', 'taylorsync3', 'taylorsync4', 'taylorsynctrain1', 'taylorsynctrain2'],
+        NO_LMKS : false,
     },
 
     # weight of loss
@@ -40,11 +41,11 @@
         # ckpt path
         # load checkpoints from ./train_result/{ckpt_id}/ckpt/G_{ckpt_step}.pt
         # if ckpt_id is empty, load G_latest.pt and D_latest.pt
-        TURN_ON: true,
-        ID_NUM: 26,
+        TURN_ON: false,
+        ID_NUM: null,
         STEP: null,
-        G_PRE_PATH: 'ckpt/sync01_G_00315000.pt',
-        D_PRE_PATH: 'ckpt/sync01_D_00315000.pt',
+        G_PRE_PATH: 'ckpt/Oct_1016_dense_G_00315000.pt',
+        D_PRE_PATH: 'ckpt/Oct_1016_dense_D_00315000.pt',
     },
 
     WANDB: {
@@ -65,10 +66,12 @@
     },
 
     DATASET: {
+        MULTI_DET_VIDEOS: '/home/8414sys/Lipsync_training_last/multi_det_videos.txt',
         TRAIN_PATH:{
             GT_IMG:
                 [
                     '/ssd2t/DATASET/VoxCeleb2/1id_1video/512over/*/*/*/aligned_imgs',
+                    '/ssd2t/DATASET/VoxCeleb2/Oct1_sync_crop_part2/*/*/*/aligned_imgs',
                 ],
             OPT_IMG:
                 [
@@ -80,6 +83,7 @@
             GT_IMG:
                 [
                     '/ssd2t/DATASET/VoxCeleb2/1id_1video/512over/*/*/*/aligned_imgs',
+                    '/ssd2t/DATASET/VoxCeleb2/Oct1_sync_crop_part2/*/*/*/aligned_imgs',
                 ],
             OPT_IMG:
                 [

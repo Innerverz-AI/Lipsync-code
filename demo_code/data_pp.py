@@ -11,7 +11,7 @@ import torch
 from innerverz import DECA, FaceAligner
 from util import util
 
-sys.path.append('../')
+sys.path.append("../")
 from utils import Sync_tool
 
 
@@ -41,9 +41,7 @@ def video_pp(opts, FA, DECA):
     face_path_list = sorted(glob.glob(os.path.join(opts.face_save_path, "*.*")))
 
     deca_code_dict_list = []
-    for _, lmks, lmks_3D, face_path in zip(
-        face_bool_list, lmks_list, lmks_3D_list, face_path_list
-    ):
+    for _, lmks, lmks_3D, face_path in zip(face_bool_list, lmks_list, lmks_3D_list, face_path_list):
         face = cv2.imread(face_path)
 
         image_dict = DECA.data_preprocess(face, lmks)
@@ -53,13 +51,9 @@ def video_pp(opts, FA, DECA):
             code_dict, tform_invs=image_dict["tform_inv"]
         )
         lmks_ts = torch.tensor(lmks_3D[None, ...], device=trans_landmarks3ds.device)
-        z_calibration_t = (lmks_ts[:, :, 2] - trans_landmarks3ds[:, :, 2]).mean(
-            1, keepdim=True
-        )
+        z_calibration_t = (lmks_ts[:, :, 2] - trans_landmarks3ds[:, :, 2]).mean(1, keepdim=True)
         z_calibration_s = torch.ones_like(z_calibration_t)
-        code_dict["z_calibration"] = torch.cat(
-            [z_calibration_t, z_calibration_s], dim=1
-        )
+        code_dict["z_calibration"] = torch.cat([z_calibration_t, z_calibration_s], dim=1)
         optimized_code_dict = DC.optimize_per_batch(
             code_dict, lmks_ts, image_dict["tform_inv"], num_iter=10, lmk_type="3D"
         )
@@ -79,12 +73,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # path options
-    parser.add_argument(
-        "--video_path", type=str, default="../assets/demo_videos"
-    )
-    parser.add_argument(
-        "--synced_video_path", type=str, default="./assets/synced_videos"
-    )
+    parser.add_argument("--video_path", type=str, default="../assets/demo_videos")
+    parser.add_argument("--synced_video_path", type=str, default="./assets/synced_videos")
     parser.add_argument("--pp_save_root", type=str, default="./assets/synced_data_pp")
 
     # video options
@@ -100,7 +90,7 @@ if __name__ == "__main__":
     FA_3D = FaceAligner(size=args.image_size, lmk_type="3D")
     synctool = Sync_tool()
 
-    video_file_paths = sorted(glob.glob(os.path.join(args.video_path, '*.*')))
+    video_file_paths = sorted(glob.glob(os.path.join(args.video_path, "*.*")))
     for i, video_file_path in enumerate(video_file_paths):
         try:
             work = f"###  {os.path.basename(video_file_path)} ({str(i+1)}/{len(video_file_paths)})  ###"
@@ -109,10 +99,10 @@ if __name__ == "__main__":
             print("#" * len(work))
             video_file = os.path.basename(video_file_path)
             synced_video_path = os.path.join(args.synced_video_path, video_file)
-            
-            print('Sync...')
+
+            print("Sync...")
             synctool.forward(video_file_path, synced_video_path)
-            
+
             args.video_file_path = synced_video_path
             args = util.setting_pp_init(args)
             video_pp(args, FA_3D, DC)

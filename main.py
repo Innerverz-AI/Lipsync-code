@@ -1,4 +1,3 @@
-
 import glob
 import os
 
@@ -10,9 +9,9 @@ from utils import Sync_tool, get_audio_features
 
 # get synced videos
 
-video_path = './assets/videos/GU_1.mp4'
+video_path = "./assets/videos/GU_1.mp4"
 sync_tool = Sync_tool()
-os.makedirs('./assets/synced_videos/', exist_ok=True)
-offset = sync_tool.forward(video_path, './assets/synced_videos/GU_1.mp4')
-    
+os.makedirs("./assets/synced_videos/", exist_ok=True)
+offset = sync_tool.forward(video_path, "./assets/synced_videos/GU_1.mp4")
+
 print("YES")
